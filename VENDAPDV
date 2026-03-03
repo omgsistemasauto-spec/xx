@@ -1,0 +1,3741 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMG PDV - Sistema de Vendas</title>
+    
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* SIDEBAR ESQUERDO */
+        .sidebar-left {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 226px;
+            height: 100vh;
+            background: linear-gradient(180deg, #6c059b 0%, #4a0470 100%);
+            z-index: 1000;
+            padding-top: 30px;
+        }
+
+        .logo {
+            width: 180px;
+            height: 120px;
+            margin: 0 auto 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .nav-menu {
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-item.active {
+            background: rgba(108, 5, 155, 0.8);
+        }
+
+        /* HEADER COM BARRA DE PESQUISA */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 226px;
+            right: 420px;
+            height: 80px;
+            background: linear-gradient(135deg, #6c059b 0%, #4a0470 100%);
+            border-bottom: 3px solid #8b5cf6;
+            border-top: 3px solid #8b5cf6;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(108, 5, 155, 0.3);
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+            margin-right: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 50px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.95);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: white;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #6c059b;
+        }
+
+        /* BOTÃO ABRIR CAIXA */
+        .btn-caixa {
+            padding: 12px 24px;
+            border: 2px solid white;
+            background: transparent;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-caixa:hover {
+            background: white;
+            color: #6c059b;
+            transform: translateY(-2px);
+        }
+
+        .btn-caixa.aberto {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+
+        .btn-caixa.aberto:hover {
+            background: #16a34a;
+            border-color: #16a34a;
+        }
+
+        .btn-caixa.fechado {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+
+        .btn-caixa.fechado:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
+
+        /* BOTÃO RETIRAR DINHEIRO */
+        .btn-retirada {
+            padding: 12px 20px;
+            border: 2px solid #f59e0b;
+            background: #f59e0b;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .btn-retirada:hover {
+            background: #d97706;
+            border-color: #d97706;
+            transform: translateY(-2px);
+        }
+
+        /* BOTÃO HISTÓRICO */
+        .btn-historico {
+            padding: 12px 20px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .btn-historico:hover {
+            background: white;
+            color: #6c059b;
+            transform: translateY(-2px);
+        }
+
+        /* MODAL HISTÓRICO */
+        .modal-historico {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-historico.active {
+            display: flex;
+        }
+
+        .modal-historico-content {
+            background: white;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .modal-historico-header {
+            background: linear-gradient(135deg, #6c059b 0%, #4a0470 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-historico-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .btn-close-modal {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-close-modal:hover {
+            background: white;
+            color: #6c059b;
+        }
+
+        .modal-historico-body {
+            padding: 30px;
+        }
+
+        .filtro-data {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filtro-data label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .filtro-data input[type="date"] {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filtro-data input[type="date"]:focus {
+            outline: none;
+            border-color: #6c059b;
+        }
+
+        .btn-buscar {
+            padding: 10px 24px;
+            background: #6c059b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-buscar:hover {
+            background: #4a0470;
+        }
+
+        .venda-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .venda-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #6c059b;
+        }
+
+        .venda-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .venda-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .venda-id {
+            font-size: 18px;
+            font-weight: 700;
+            color: #6c059b;
+        }
+
+        .venda-data {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .venda-total {
+            font-size: 24px;
+            font-weight: 700;
+            color: #22c55e;
+        }
+
+        .venda-metodo {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .metodo-pix {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .metodo-credito {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .metodo-debito {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .metodo-dinheiro {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .venda-itens {
+            margin-bottom: 15px;
+        }
+
+        .item-venda {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .item-venda:last-child {
+            border-bottom: none;
+        }
+
+        .item-nome {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .item-qtd {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .item-preco {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .venda-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-reverter {
+            padding: 10px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reverter:hover {
+            background: #dc2626;
+        }
+
+        .btn-reverter:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .venda-cancelada {
+            opacity: 0.6;
+            border-color: #ef4444 !important;
+        }
+
+        .badge-cancelada {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .loading-vendas {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        .empty-vendas {
+            text-align: center;
+            padding: 60px;
+            color: #9ca3af;
+        }
+
+        .empty-vendas-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* ÁREA PRINCIPAL */
+        .main-content {
+            margin-left: 226px;
+            margin-right: 420px;
+            margin-top: 80px;
+            padding: 30px;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* GRID DE CATEGORIAS */
+        .categorias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .categoria-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .categoria-header {
+            padding: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .categoria-header.sorvetes {
+            background: #6c059b;
+        }
+
+        .categoria-header.bebidas {
+            background: #6c059b;
+        }
+
+        .categoria-header.salgados {
+            background: #6c059b;
+        }
+
+        .categoria-header.combos {
+            background: #6c059b;
+        }
+
+        .categoria-header.outros {
+            background: #6c059b;
+        }
+
+        .categoria-produtos {
+            padding: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* PRODUTO ITEM - NOVO LAYOUT */
+        .produto-item {
+            padding: 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .produto-item:hover {
+            border-color: #6c059b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 5, 155, 0.1);
+        }
+
+        .produto-nome {
+            font-weight: 700;
+            font-size: 20px;
+            color: #1f2937;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .produto-codigo {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+
+        .produto-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .produto-preco {
+            font-weight: 700;
+            color: #10b981;
+            font-size: 28px;
+        }
+
+        .btn-adicionar {
+            width: 56px;
+            height: 56px;
+            background: #6c059b;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 32px;
+            font-weight: 700;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-adicionar:hover {
+            background: #4a0470;
+            transform: scale(1.1);
+        }
+
+        .btn-adicionar:active {
+            transform: scale(0.95);
+        }
+
+        .produto-acoes {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-reposicao {
+            width: 48px;
+            height: 48px;
+            background: #f59e0b;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-reposicao:hover {
+            background: #d97706;
+            transform: scale(1.1);
+        }
+
+        .btn-reposicao:active {
+            transform: scale(0.95);
+        }
+
+        /* SIDEBAR DIREITO - CARRINHO */
+        .sidebar-right {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 420px;
+            height: 100vh;
+            background: white;
+            border-left: 2px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .carrinho-header {
+            padding: 25px 20px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .carrinho-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .btn-rep-sorvete {
+            padding: 8px 16px;
+            background: #06b6d4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-rep-sorvete:hover {
+            background: #0891b2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-rep-sorvete:active {
+            transform: translateY(0);
+        }
+
+        .carrinho-table {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        th:last-child {
+            text-align: right;
+        }
+
+        td {
+            padding: 15px 12px;
+            font-size: 14px;
+            color: #1f2937;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .qtd-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qtd-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .qtd-btn:hover {
+            border-color: #6c059b;
+            color: #6c059b;
+            background: #f3e8ff;
+        }
+
+        .qtd-numero {
+            min-width: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .carrinho-total {
+            padding: 25px 20px;
+            border-top: 2px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .total-valor {
+            font-size: 28px;
+            font-weight: 700;
+            color: #6c059b;
+        }
+
+        /* BOTÕES DE PAGAMENTO */
+        .pagamento-btns {
+            padding: 20px;
+            background: white;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .btn-pagamento {
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .btn-pix {
+            background: #10b981;
+        }
+
+        .btn-pix:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-credito {
+            background: #6c059b;
+        }
+
+        .btn-credito:hover {
+            background: #4a0470;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 5, 155, 0.3);
+        }
+
+        .btn-debito {
+            background: #f59e0b;
+        }
+
+        .btn-debito:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-dinheiro {
+            background: #22c55e;
+        }
+
+        .btn-dinheiro:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-dividido {
+            background: linear-gradient(135deg, #6c059b 0%, #f59e0b 50%, #22c55e 100%);
+            grid-column: span 3;
+        }
+
+        .btn-dividido:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 5, 155, 0.5);
+        }
+
+        /* MODAL PAGAMENTO DIVIDIDO */
+        .modal-dividido {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-dividido.active {
+            display: flex;
+        }
+
+        .modal-dividido-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-dividido-header {
+            background: linear-gradient(135deg, #6c059b 0%, #4a0470 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-dividido-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .valor-total-dividido {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .modal-dividido-body {
+            padding: 30px;
+        }
+
+        .pagamento-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .pagamento-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pagamento-numero {
+            font-size: 18px;
+            font-weight: 700;
+            color: #6c059b;
+        }
+
+        .btn-remover-pagamento {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-remover-pagamento:hover {
+            background: #dc2626;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .resumo-dividido {
+            background: #f3e8ff;
+            border: 2px solid #6c059b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .resumo-linha {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+        }
+
+        .resumo-total {
+            border-top: 2px solid #6c059b;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .valor-faltante {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .valor-ok {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        .btn-adicionar-parcela {
+            width: 100%;
+            padding: 15px;
+            background: #6c059b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .btn-adicionar-parcela:hover {
+            background: #4a0470;
+        }
+
+        .carrinho-empty {
+            padding: 60px 20px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .carrinho-empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* LOADING */
+        .loading-container {
+            padding: 40px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #6c059b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* PAINEL ADMIN */
+        .admin-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 246px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1001;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .admin-btn {
+            padding: 10px 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+
+        .admin-btn:hover {
+            background: #6c059b;
+            border-color: #6c059b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR ESQUERDO -->
+    <div class="sidebar-left">
+        <div class="logo">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgJqyi5ZaH7o5awjUXk8kJJ9Q7yfFGgw4czmB_f9b8j8C5ZOpTRGPdg4ErsmUflzswgifqIyNYtxSmlEK2yTNlRisk85q8ezoQ9-FNTJ9SRaeJaXS_Yxapff8sXVvLJEz6XoNwVldARJaMEUXKFD1p4qkxUAM0QlrGJkBkKgHSrjWudoBWRCOfZAjYZ0NJF/s16000/Generated%20Image%20February%2012,%202026%20-%201_04PM.png" alt="Logo OMG">
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="toggleView('pdv')">
+                <span>🏪</span>
+                <span>HOME</span>
+            </div>
+            <div class="nav-item" onclick="toggleView('admin')">
+                <span>⚙️</span>
+                <span>ADMIN</span>
+            </div>
+            <div class="nav-item" onclick="fazerLogout()" style="margin-top: auto;">
+                <span>🚪</span>
+                <span>SAIR</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER COM BARRA DE PESQUISA -->
+    <div class="header">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput"
+                placeholder="Buscar produtos por nome ou código..."
+                oninput="filtrarProdutos(this.value)"
+            >
+        </div>
+        <button class="btn-caixa" id="btnCaixa" onclick="gerenciarCaixa()">
+            <span id="iconeCaixa">💰</span>
+            <span id="textoCaixa">ABRIR CAIXA</span>
+        </button>
+        <button class="btn-retirada" id="btnRetirada" onclick="retirarDinheiro()" style="display: none;">
+            💸 RETIRAR
+        </button>
+        <button class="btn-historico" onclick="abrirHistoricoVendas()">
+            📊 HISTÓRICO
+        </button>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content">
+        <!-- GRID DE CATEGORIAS -->
+        <div class="categorias-grid" id="categoriasGrid">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 20px;">Carregando produtos...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR DIREITO - CARRINHO -->
+    <div class="sidebar-right">
+        <div class="carrinho-header">
+            <h2>🛒 Carrinho</h2>
+            <button class="btn-rep-sorvete" onclick="notificarReposicaoSorvete()" title="Avisar que sorvete foi reposto">
+                🍦 REP SORVETE
+            </button>
+        </div>
+
+        <div class="carrinho-table" id="carrinhoTable">
+            <div class="carrinho-empty">
+                <div class="carrinho-empty-icon">🛒</div>
+                <p>Carrinho vazio</p>
+            </div>
+        </div>
+
+        <div class="carrinho-total" id="carrinhoTotalDiv" style="display: none;">
+            <div class="total-row">
+                <span>TOTAL:</span>
+                <span class="total-valor" id="totalValor">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div class="pagamento-btns">
+            <button class="btn-pagamento btn-pix" onclick="finalizarVendaPix()">PIX</button>
+            <button class="btn-pagamento btn-credito" onclick="finalizarVendaCredito()">CRÉDITO</button>
+            <button class="btn-pagamento btn-debito" onclick="finalizarVendaDebito()">DÉBITO</button>
+            <button class="btn-pagamento btn-pix" onclick="finalizarVendaDinheiro()"> DINHEIRO</button>
+            <button class="btn-pagamento btn-credito" onclick="abrirPagamentoDividido()"> DIVIDIDO</button>
+        </div>
+    </div>
+
+    <!-- PAINEL ADMINISTRATIVO -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-title">Funções Administrativas TEF</div>
+        <div class="admin-grid">
+            <button class="admin-btn" onclick="start()">Start</button>
+            <button class="admin-btn" onclick="stop()">Stop</button>
+            <button class="admin-btn" onclick="configuracao()">Config</button>
+            <button class="admin-btn" onclick="ativacao()">Ativação</button>
+            <button class="admin-btn" onclick="reimpressao()">Reimp.</button>
+            <button class="admin-btn" onclick="relatorio()">Relatório</button>
+            <button class="admin-btn" onclick="cancelamento()">Cancel.</button>
+            <button class="admin-btn" onclick="intpos_venda()">IntPos V</button>
+            <button class="admin-btn" onclick="intpos_adm()">IntPos A</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const SUPABASE_URL = 'https://alhqozirjypclsukjhiy.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsaHFvemlyanlwY2xzdWtqaGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MzI5NzgsImV4cCI6MjA4NjQwODk3OH0.fVDK0dtv8fOlwuSX0s32xjOQDAF2Yl_H8ZT9rFDB0uo';
+        
+        
+        let supabaseClient;
+        let lojaAtual = null;
+        let usuarioAtual = null;
+        
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('Supabase inicializado com sucesso!');
+        } catch (error) {
+            console.error('Erro ao inicializar Supabase:', error);
+        }
+
+        // ==================== VERIFICAR AUTENTICAÇÃO ====================
+        async function verificarAutenticacao() {
+            console.log('Verificando autenticação...');
+            
+            try {
+                // Verificar sessão do Supabase
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) {
+                    console.error('❌ Erro ao buscar sessão:', error);
+                    return false; // NÃO redirecionar em erro de rede
+                }
+
+                if (!session || !session.user) {
+                    console.log('❌ Usuário não autenticado, redirecionando para login...');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                console.log('✅ Sessão ativa:', session.user.email);
+                usuarioAtual = session.user;
+
+                // Buscar loja do usuário (CORRIGIDO - query mais simples)
+                console.log('Buscando loja do usuário:', session.user.id);
+                
+                const { data: usuarioLoja, error: lojaError } = await supabaseClient
+                    .from('usuarios_loja')
+                    .select('loja_id, cargo')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle(); // ✅ USA maybeSingle PARA NÃO DAR ERRO SE NÃO ENCONTRAR
+
+                if (lojaError) {
+                    console.error('❌ Erro SQL ao buscar loja:', lojaError);
+                    alert('Erro ao buscar loja: ' + lojaError.message);
+                    return false; // NÃO redirecionar em erro SQL
+                }
+
+                if (!usuarioLoja || !usuarioLoja.loja_id) {
+                    console.error('❌ Usuário sem loja associada');
+                    alert('Erro: Usuário sem loja associada.\n\nAbra diagnostico.html e clique em "Tentar Corrigir"');
+                    await supabaseClient.auth.signOut();
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                console.log('✅ Registro encontrado em usuarios_loja:', usuarioLoja);
+
+                // Agora buscar dados completos da loja
+                const { data: lojaInfo, error: lojaInfoError } = await supabaseClient
+                    .from('lojas')
+                    .select('*')
+                    .eq('id', usuarioLoja.loja_id)
+                    .single();
+
+                if (lojaInfoError || !lojaInfo) {
+                    console.error('❌ Erro ao buscar informações da loja:', lojaInfoError);
+                    alert('Erro ao carregar informações da loja');
+                    await supabaseClient.auth.signOut();
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                lojaAtual = lojaInfo;
+                console.log('✅ Loja carregada:', lojaAtual.nome);
+                console.log('📊 Plano:', lojaAtual.plano);
+                console.log('👤 Cargo:', usuarioLoja.cargo);
+
+                // Verificar status da loja
+                if (lojaAtual.status !== 'ATIVO') {
+                    alert('Loja suspensa ou cancelada. Entre em contato com o suporte.');
+                    await supabaseClient.auth.signOut();
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                // Atualizar interface com nome da loja
+                atualizarInfoLoja();
+                
+                return true;
+
+            } catch (error) {
+                console.error('❌ Erro crítico na verificação:', error);
+                // NÃO redirecionar automaticamente em erro de rede
+                // Apenas mostrar erro e permitir que o usuário tente novamente
+                alert('Erro ao verificar autenticação: ' + error.message + '\n\nVerifique sua conexão e recarregue a página.');
+                return false;
+            }
+        }
+
+        // ==================== ATUALIZAR INFO DA LOJA NA UI ====================
+        function atualizarInfoLoja() {
+            // Você pode adicionar o nome da loja no header se quiser
+            console.log(`🏪 Loja: ${lojaAtual.nome}`);
+        }
+
+        // ==================== LOGOUT ====================
+        async function fazerLogout() {
+            if (confirm('Deseja sair do sistema?')) {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let carrinho = [];
+        let produtosTodos = [];
+        let caixaAtual = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM carregado, verificando autenticação...');
+            
+            // PRIMEIRO: Verificar se está autenticado
+            const autenticado = await verificarAutenticacao();
+            
+            if (!autenticado) {
+                return; // Para a execução se não estiver autenticado
+            }
+
+            // SEGUNDO: Verificar status do caixa
+            await verificarStatusCaixa();
+
+            // TERCEIRO: Carregar produtos da loja
+            console.log('Iniciando carregamento de produtos...');
+            carregarProdutos();
+        });
+
+        // ==================== CARREGAR PRODUTOS DO SUPABASE ====================
+        async function carregarProdutos() {
+            console.log('Carregando produtos da loja:', lojaAtual.id);
+            try {
+                // IMPORTANTE: O RLS já filtra automaticamente por loja_id
+                // Mas podemos ser explícitos para garantir
+                const { data, error } = await supabaseClient
+                    .from('itens')
+                    .select('codigo, nome, categoria, preco_venda, estoque, unidade, loja_id')
+                    .eq('ativo', true)
+                    .eq('loja_id', lojaAtual.id) // Filtro explícito por segurança
+                    .gt('estoque', 0)
+                    .order('nome');
+
+                if (error) {
+                    console.error('Erro Supabase:', error);
+                    throw error;
+                }
+
+                console.log(`✅ ${data.length} produtos carregados da loja ${lojaAtual.nome}`);
+                produtosTodos = data || [];
+                renderizarCategorias(produtosTodos);
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+                document.getElementById('categoriasGrid').innerHTML = `
+                    <div class="carrinho-empty">
+                        <div class="carrinho-empty-icon">⚠️</div>
+                        <p>Erro ao carregar produtos</p>
+                        <p style="font-size: 12px; margin-top: 8px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== RENDERIZAR CATEGORIAS ====================
+        function renderizarCategorias(produtos) {
+            console.log('Renderizando categorias com', produtos.length, 'produtos');
+            const categorias = ['Sorvetes', 'Bebidas', 'Salgados', 'Combos', 'Outros'];
+            const grid = document.getElementById('categoriasGrid');
+
+            if (produtos.length === 0) {
+                grid.innerHTML = `
+                    <div class="carrinho-empty">
+                        <div class="carrinho-empty-icon">📦</div>
+                        <p>Nenhum produto cadastrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            categorias.forEach(categoria => {
+                let produtosCategoria;
+                
+                if (categoria === 'Sorvetes') {
+                    // Produtos que começam com "X" são sorvetes
+                    produtosCategoria = produtos.filter(p => p.codigo.toUpperCase().startsWith('X'));
+                } else {
+                    // Demais produtos vão para suas categorias normais (exceto os que começam com X)
+                    produtosCategoria = produtos.filter(p => 
+                        p.categoria === categoria && !p.codigo.toUpperCase().startsWith('X')
+                    );
+                }
+                
+                if (produtosCategoria.length === 0) return;
+
+                const corClasse = categoria.toLowerCase();
+                
+                html += `
+                    <div class="categoria-card">
+                        <div class="categoria-header ${corClasse}">${categoria.toUpperCase()}</div>
+                        <div class="categoria-produtos">
+                            ${produtosCategoria.map(produto => `
+                                <div class="produto-item">
+                                    <div class="produto-nome">${produto.nome}</div>
+                                    <div class="produto-codigo">Cód: ${produto.codigo} | Estoque: ${produto.estoque}</div>
+                                    <div class="produto-footer">
+                                        <div class="produto-preco">R$ ${parseFloat(produto.preco_venda).toFixed(2)}</div>
+                                        <div class="produto-acoes">
+                                            <button class="btn-reposicao" onclick='reporEstoque(${JSON.stringify(produto).replace(/'/g, "&apos;")})' title="Repor Estoque">📦</button>
+                                            <button class="btn-adicionar" onclick='adicionarAoCarrinho(${JSON.stringify(produto).replace(/'/g, "&apos;")})'>+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+            console.log('Categorias renderizadas com sucesso');
+        }
+
+        // ==================== FILTRAR PRODUTOS ====================
+        function filtrarProdutos(termo) {
+            if (!termo || termo.trim() === '') {
+                renderizarCategorias(produtosTodos);
+                return;
+            }
+
+            const termoLower = termo.toLowerCase();
+            const produtosFiltrados = produtosTodos.filter(produto => 
+                produto.nome.toLowerCase().includes(termoLower) ||
+                produto.codigo.toLowerCase().includes(termoLower)
+            );
+
+            renderizarCategorias(produtosFiltrados);
+        }
+
+        // ==================== CARRINHO DE COMPRAS ====================
+        
+        // ==================== REPOSIÇÃO DE ESTOQUE ====================
+        async function reporEstoque(produto) {
+            console.log('Iniciando reposição para:', produto);
+
+            const quantidade = prompt(
+                `📦 REPOSIÇÃO DE ESTOQUE\n\n` +
+                `Produto: ${produto.nome}\n` +
+                `Código: ${produto.codigo}\n` +
+                `Estoque Atual: ${produto.estoque}\n\n` +
+                `Digite a quantidade a ADICIONAR ao estoque:`
+            );
+
+            if (quantidade === null) return; // Cancelou
+
+            const qtdReposicao = parseInt(quantidade);
+
+            if (isNaN(qtdReposicao) || qtdReposicao <= 0) {
+                alert('❌ Quantidade inválida! Digite um número positivo.');
+                return;
+            }
+
+            try {
+                const novoEstoque = produto.estoque + qtdReposicao;
+
+                console.log(`Atualizando estoque: ${produto.estoque} → ${novoEstoque}`);
+
+                // 1. Atualizar estoque no banco
+                const { error: updateError } = await supabaseClient
+                    .from('itens')
+                    .update({ estoque: novoEstoque })
+                    .eq('codigo', produto.codigo)
+                    .eq('loja_id', lojaAtual.id);
+
+                if (updateError) throw updateError;
+
+                console.log('✅ Estoque atualizado no banco');
+
+                // 2. Registrar movimentação
+                const { error: movError } = await supabaseClient
+                    .from('movimentacoes')
+                    .insert([{
+                        item_codigo: produto.codigo,
+                        tipo: 'REPOSICAO',
+                        quantidade: qtdReposicao,
+                        valor_unitario: produto.preco_venda,
+                        responsavel: usuarioAtual.email,
+                        observacao: `Reposição manual via PDV`
+                    }]);
+
+                if (movError) console.warn('Aviso ao registrar movimentação:', movError);
+
+                console.log('✅ Movimentação registrada');
+
+                // 3. Enviar notificação para Telegram
+                await enviarNotificacaoTelegram(produto, qtdReposicao, novoEstoque);
+
+                // 4. Recarregar produtos para atualizar interface
+                await carregarProdutos();
+
+                alert(
+                    `✅ REPOSIÇÃO REALIZADA!\n\n` +
+                    `Produto: ${produto.nome}\n` +
+                    `Quantidade adicionada: ${qtdReposicao}\n` +
+                    `Estoque anterior: ${produto.estoque}\n` +
+                    `Estoque novo: ${novoEstoque}\n\n` +
+                    `📱 Notificação enviada ao Telegram!`
+                );
+
+            } catch (error) {
+                console.error('❌ Erro ao repor estoque:', error);
+                alert('❌ Erro ao repor estoque:\n\n' + error.message);
+            }
+        }
+
+        async function enviarNotificacaoTelegram(produto, quantidade, novoEstoque) {
+            const token = '7885973618:AAEY2K3mNziT0gbEJ8MjCWXus_dSGr0ELz8';
+            const chatId = '-1002410736554';
+
+            const mensagem = 
+                `📦 *REPOSIÇÃO DE ESTOQUE*\n\n` +
+                `🏪 *Loja:* ${lojaAtual.nome}\n` +
+                `📦 *Produto:* ${produto.nome}\n` +
+                `🔢 *Código:* ${produto.codigo}\n` +
+                `➕ *Quantidade Reposta:* ${quantidade}\n` +
+                `📊 *Estoque Anterior:* ${produto.estoque}\n` +
+                `✅ *Estoque Novo:* ${novoEstoque}\n` +
+                `👤 *Responsável:* ${usuarioAtual.email}\n` +
+                `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR')}`;
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: mensagem,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    console.log('✅ Notificação enviada ao Telegram com sucesso');
+                } else {
+                    console.error('❌ Erro ao enviar Telegram:', data);
+                }
+            } catch (error) {
+                console.error('❌ Erro na requisição Telegram:', error);
+                // Não bloqueia a reposição se o Telegram falhar
+            }
+        }
+
+        // ==================== NOTIFICAÇÃO REPOSIÇÃO SORVETE ====================
+        async function notificarReposicaoSorvete() {
+            const confirmacao = confirm(
+                '🍦 NOTIFICAR REPOSIÇÃO DE SORVETE\n\n' +
+                'Deseja enviar notificação ao Telegram informando\n' +
+                'que o sorvete foi reposto?\n\n' +
+                '✅ OK = Enviar notificação\n' +
+                '❌ Cancelar = Não enviar'
+            );
+
+            if (!confirmacao) return;
+
+            const token = '8008178289:AAGfcm32ibQCt5Ew1U5euarrcIevAmsS0Wk';
+            const chatId = '-5010685791';
+
+            const mensagem = 
+                `🍦 *SORVETE REPOSTO*\n\n` +
+                `🏪 *Loja:* ${lojaAtual.nome}\n` +
+                `✅ *Status:* Sorvete foi reposto\n` +
+                `👤 *Responsável:* ${usuarioAtual.email}\n` +
+                `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR')}\n\n` +
+                `_Notificação enviada via PDV_`;
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            try {
+                console.log('Enviando notificação de sorvete ao Telegram...');
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: mensagem,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    console.log('✅ Notificação de sorvete enviada com sucesso');
+                    alert(
+                        '✅ NOTIFICAÇÃO ENVIADA!\n\n' +
+                        '🍦 Telegram notificado que o sorvete foi reposto.\n\n' +
+                        `Loja: ${lojaAtual.nome}\n` +
+                        `Horário: ${new Date().toLocaleString('pt-BR')}`
+                    );
+                } else {
+                    console.error('❌ Erro ao enviar Telegram:', data);
+                    alert('❌ Erro ao enviar notificação ao Telegram:\n\n' + JSON.stringify(data));
+                }
+            } catch (error) {
+                console.error('❌ Erro na requisição Telegram:', error);
+                alert('❌ Erro ao enviar notificação:\n\n' + error.message);
+            }
+        }
+
+        // ==================== NOTIFICAÇÃO VENDA DE SORVETE ====================
+        async function notificarVendaSorvete(itensCarrinho, vendaId, valorTotal) {
+            console.log('▶️ notificarVendaSorvete INICIADA');
+            console.log('Itens recebidos:', itensCarrinho);
+            console.log('Venda ID:', vendaId);
+            console.log('Valor Total:', valorTotal);
+
+            const token = '8008178289:AAGfcm32ibQCt5Ew1U5euarrcIevAmsS0Wk';
+            const chatId = '-5010685791';
+
+            console.log('Token:', token);
+            console.log('Chat ID:', chatId);
+
+            // Filtrar apenas sorvetes (código começa com X)
+            const sorvetes = itensCarrinho.filter(item => {
+                const codigoUpper = String(item.codigo).toUpperCase();
+                return codigoUpper.startsWith('X');
+            });
+
+            console.log('Sorvetes filtrados:', sorvetes);
+
+            if (sorvetes.length === 0) {
+                console.log('⚠️ Nenhum sorvete encontrado - abortando notificação');
+                return;
+            }
+
+            // Montar lista de sorvetes vendidos
+            let listaSorvetes = '';
+            let totalSorvetes = 0;
+            let quantidadeTotal = 0;
+
+            sorvetes.forEach(item => {
+                const subtotal = item.preco * item.quantidade;
+                totalSorvetes += subtotal;
+                quantidadeTotal += item.quantidade;
+                listaSorvetes += `• ${item.nome} (${item.codigo})\n  Qtd: ${item.quantidade} | R$ ${subtotal.toFixed(2)}\n`;
+            });
+
+            console.log('Lista sorvetes montada:', listaSorvetes);
+            console.log('Total sorvetes:', totalSorvetes);
+            console.log('Quantidade total:', quantidadeTotal);
+
+            const mensagem = 
+                `🍦 *VENDA DE SORVETE*\n\n` +
+                `🏪 *Loja:* ${lojaAtual.nome}\n` +
+                `🆔 *Venda:* #${vendaId}\n` +
+                `📊 *Quantidade:* ${quantidadeTotal} ${quantidadeTotal === 1 ? 'unidade' : 'unidades'}\n\n` +
+                `*Sorvetes Vendidos:*\n${listaSorvetes}\n` +
+                `💰 *Total Sorvetes:* R$ ${totalSorvetes.toFixed(2)}\n` +
+                `💵 *Total Venda:* R$ ${valorTotal.toFixed(2)}\n` +
+                `👤 *Vendedor:* ${usuarioAtual.email}\n` +
+                `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR')}\n\n` +
+                `_Notificação automática via PDV_`;
+
+            console.log('Mensagem a enviar:', mensagem);
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            try {
+                console.log('📤 Enviando requisição para:', url);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: mensagem,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                console.log('📥 Resposta recebida. Status:', response.status);
+
+                const data = await response.json();
+                console.log('📄 Dados da resposta:', data);
+
+                if (data.ok) {
+                    console.log('✅✅✅ Notificação de venda de sorvete ENVIADA COM SUCESSO!');
+                } else {
+                    console.error('❌ Telegram retornou erro:', data);
+                    console.error('Descrição do erro:', data.description);
+                }
+            } catch (error) {
+                console.error('❌ ERRO na requisição HTTP:', error);
+                console.error('Detalhes do erro:', error.message);
+                console.error('Stack:', error.stack);
+                // Não bloqueia a venda se falhar
+            }
+        }
+
+        // ==================== NOTIFICAÇÃO DE AÇÕES DO CAIXA ====================
+        async function notificarAcaoCaixa(acao, dados = {}) {
+            console.log('▶️ notificarAcaoCaixa INICIADA');
+            console.log('Ação:', acao);
+            console.log('Dados:', dados);
+
+            const token = '8008178289:AAGfcm32ibQCt5Ew1U5euarrcIevAmsS0Wk';
+            const chatId = '-1002732995273';
+
+            console.log('Token:', token);
+            console.log('Chat ID:', chatId);
+
+            let icone = '';
+            let titulo = '';
+            let detalhes = '';
+
+            switch(acao) {
+                case 'CLIQUE_ABRIR':
+                    icone = '🔓';
+                    titulo = 'BOTÃO ABRIR CAIXA CLICADO';
+                    detalhes = `⚠️ Usuário clicou no botão para abrir o caixa`;
+                    break;
+
+                case 'CLIQUE_FECHAR':
+                    icone = '🔒';
+                    titulo = 'BOTÃO FECHAR CAIXA CLICADO';
+                    detalhes = `⚠️ Usuário clicou no botão para fechar o caixa`;
+                    break;
+
+                case 'CLIQUE_RETIRADA':
+                    icone = '💸';
+                    titulo = 'BOTÃO RETIRADA CLICADO';
+                    detalhes = `⚠️ Usuário clicou no botão de retirada de dinheiro`;
+                    break;
+
+                case 'ABRIR':
+                    icone = '🔓';
+                    titulo = 'CAIXA ABERTO';
+                    detalhes = 
+                        `💵 *Valor Inicial:* R$ ${parseFloat(dados.valorInicial || 0).toFixed(2)}\n` +
+                        `📝 *Observação:* ${dados.observacao || 'Nenhuma'}`;
+                    break;
+
+                case 'FECHAR':
+                    icone = '🔒';
+                    titulo = 'CAIXA FECHADO';
+                    detalhes = 
+                        `💰 *Valor Inicial:* R$ ${parseFloat(dados.valorInicial || 0).toFixed(2)}\n` +
+                        `💵 *Valor Final:* R$ ${parseFloat(dados.valorFinal || 0).toFixed(2)}\n` +
+                        `📊 *Total Vendas:* R$ ${parseFloat(dados.valorVendas || 0).toFixed(2)}\n` +
+                        `🛒 *Quantidade Vendas:* ${dados.qtdVendas || 0}\n` +
+                        `💸 *Retiradas:* R$ ${parseFloat(dados.totalRetiradas || 0).toFixed(2)}\n` +
+                        `${dados.diferenca !== undefined ? 
+                            (dados.diferenca > 0 ? 
+                                `📈 *Sobra:* R$ ${Math.abs(dados.diferenca).toFixed(2)}` : 
+                                dados.diferenca < 0 ? 
+                                `📉 *Falta:* R$ ${Math.abs(dados.diferenca).toFixed(2)}` : 
+                                `✅ *Caixa bateu certinho!*`) : ''}`;
+                    break;
+
+                case 'RETIRADA':
+                    icone = '💸';
+                    titulo = 'RETIRADA DE DINHEIRO';
+                    detalhes = 
+                        `💵 *Valor:* R$ ${parseFloat(dados.valor || 0).toFixed(2)}\n` +
+                        `📝 *Motivo:* ${dados.motivo || 'Não informado'}\n` +
+                        `👤 *Responsável:* ${dados.responsavel || 'Não informado'}`;
+                    break;
+            }
+
+            const mensagem = 
+                `${icone} *${titulo}*\n\n` +
+                `🏪 *Loja:* ${lojaAtual.nome}\n` +
+                `👤 *Usuário:* ${usuarioAtual.email}\n` +
+                `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR')}\n\n` +
+                `${detalhes}\n\n` +
+                `_Notificação automática via PDV_`;
+
+            console.log('Mensagem montada:', mensagem);
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            console.log('URL:', url);
+
+            try {
+                console.log(`📤 Enviando notificação de ${acao} para Telegram...`);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: mensagem,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                console.log('📥 Resposta recebida. Status:', response.status);
+
+                const data = await response.json();
+
+                console.log('📄 Dados da resposta:', data);
+
+                if (data.ok) {
+                    console.log(`✅✅✅ Notificação de ${acao} enviada com sucesso!`);
+                } else {
+                    console.error(`❌ Telegram retornou erro para ${acao}:`, data);
+                    console.error('Descrição:', data.description);
+                }
+            } catch (error) {
+                console.error(`❌ ERRO ao enviar notificação de ${acao}:`, error);
+                console.error('Nome do erro:', error.name);
+                console.error('Mensagem:', error.message);
+                console.error('Stack:', error.stack);
+                
+                // Verificar tipo de erro
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    console.error('⚠️ Erro de rede/CORS - possíveis causas:');
+                    console.error('1. Sem conexão com internet');
+                    console.error('2. Firewall bloqueando Telegram');
+                    console.error('3. Token ou URL incorretos');
+                }
+                
+                // NÃO bloqueia a operação se notificação falhar
+            }
+        }
+
+        // ==================== CARRINHO DE COMPRAS ====================
+        function adicionarAoCarrinho(produto) {
+            console.log('Adicionando ao carrinho:', produto);
+            
+            const itemExistente = carrinho.find(item => item.codigo === produto.codigo);
+            
+            if (itemExistente) {
+                if (itemExistente.quantidade >= produto.estoque) {
+                    alert(`Estoque insuficiente! Disponível: ${produto.estoque}`);
+                    return;
+                }
+                itemExistente.quantidade++;
+                console.log('Quantidade atualizada:', itemExistente);
+            } else {
+                carrinho.push({
+                    codigo: produto.codigo,
+                    nome: produto.nome,
+                    preco: produto.preco_venda,
+                    quantidade: 1,
+                    estoque: produto.estoque
+                });
+                console.log('Novo item adicionado');
+            }
+            
+            atualizarCarrinho();
+        }
+
+        function removerDoCarrinho(index) {
+            carrinho.splice(index, 1);
+            atualizarCarrinho();
+        }
+
+        function alterarQuantidade(index, delta) {
+            const item = carrinho[index];
+            const novaQuantidade = item.quantidade + delta;
+
+            if (novaQuantidade <= 0) {
+                removerDoCarrinho(index);
+                return;
+            }
+
+            if (novaQuantidade > item.estoque) {
+                alert(`Estoque insuficiente! Disponível: ${item.estoque}`);
+                return;
+            }
+
+            item.quantidade = novaQuantidade;
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            console.log('Atualizando carrinho. Total de itens:', carrinho.length);
+            const carrinhoTable = document.getElementById('carrinhoTable');
+            const carrinhoTotalDiv = document.getElementById('carrinhoTotalDiv');
+            
+            if (carrinho.length === 0) {
+                carrinhoTable.innerHTML = `
+                    <div class="carrinho-empty">
+                        <div class="carrinho-empty-icon">🛒</div>
+                        <p>Carrinho vazio</p>
+                    </div>
+                `;
+                carrinhoTotalDiv.style.display = 'none';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Qtd</th>
+                            <th>Preço</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                const subtotal = item.preco * item.quantidade;
+                total += subtotal;
+
+                html += `
+                    <tr>
+                        <td><strong>${item.nome}</strong><br><small style="color: #6b7280;">Cód: ${item.codigo}</small></td>
+                        <td>
+                            <div class="qtd-controls">
+                                <button class="qtd-btn" onclick="alterarQuantidade(${index}, -1)">−</button>
+                                <span class="qtd-numero">${item.quantidade}</span>
+                                <button class="qtd-btn" onclick="alterarQuantidade(${index}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td>R$ ${parseFloat(item.preco).toFixed(2)}</td>
+                        <td>R$ ${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            carrinhoTable.innerHTML = html;
+            carrinhoTotalDiv.style.display = 'block';
+            document.getElementById('totalValor').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            console.log('Carrinho atualizado. Total:', total);
+        }
+
+        function limparCarrinho(semConfirmacao = false) {
+            if (carrinho.length === 0) return;
+            
+            if (semConfirmacao || confirm('Deseja limpar o carrinho?')) {
+                carrinho = [];
+                atualizarCarrinho();
+            }
+        }
+
+        function getValorTotal() {
+            return carrinho.reduce((total, item) => total + (item.preco * item.quantidade), 0).toFixed(2);
+        }
+
+        // ==================== REGISTRAR VENDA NO SUPABASE ====================
+        async function registrarVenda(tipoPagamento, dadosTEF) {
+            if (carrinho.length === 0) return;
+
+            try {
+                const valorTotal = parseFloat(getValorTotal());
+                const quantidadeItens = carrinho.reduce((total, item) => total + item.quantidade, 0);
+                
+                console.log('=== INICIANDO REGISTRO DE VENDA ===');
+                console.log('Loja:', lojaAtual.nome, '(', lojaAtual.id, ')');
+                console.log('Método:', tipoPagamento);
+                console.log('Valor Total:', valorTotal);
+                console.log('Quantidade de Itens:', quantidadeItens);
+                console.log('Produtos:', carrinho);
+                
+                // 1. INSERIR VENDA NA TABELA VENDAS (loja_id será adicionado automaticamente pelo trigger)
+                const vendaData = {
+                    valor_total: valorTotal,
+                    metodo_pagamento: tipoPagamento,
+                    quantidade_itens: quantidadeItens,
+                    status: 'CONCLUIDA',
+                    usuario: usuarioAtual.email,
+                    nsu_tef: dadosTEF?.nsu || null,
+                    chave_tef: dadosTEF?.chave || null,
+                    observacao: `Venda realizada via ${tipoPagamento} - Loja: ${lojaAtual.nome}`
+                };
+                
+                const { data: vendaRegistrada, error: vendaError } = await supabaseClient
+                    .from('vendas')
+                    .insert([vendaData])
+                    .select()
+                    .single();
+                
+                if (vendaError) {
+                    console.error('❌ Erro ao registrar venda:', vendaError);
+                    throw vendaError;
+                }
+                
+                console.log('✅ Venda registrada com ID:', vendaRegistrada.id);
+                
+                // 2. INSERIR ITENS DA VENDA NA TABELA ITENS_VENDA
+                const itensVenda = carrinho.map(item => ({
+                    venda_id: vendaRegistrada.id,
+                    codigo_produto: item.codigo,
+                    nome_produto: item.nome,
+                    quantidade: item.quantidade,
+                    preco_unitario: parseFloat(item.preco),
+                    subtotal: parseFloat(item.preco) * item.quantidade
+                }));
+                
+                const { error: itensError } = await supabaseClient
+                    .from('itens_venda')
+                    .insert(itensVenda);
+                
+                if (itensError) {
+                    console.error('❌ Erro ao registrar itens da venda:', itensError);
+                    throw itensError;
+                }
+                
+                console.log('✅ Itens da venda registrados:', itensVenda.length, 'produtos');
+                
+                // 3. ATUALIZAR ESTOQUE E REGISTRAR MOVIMENTAÇÕES
+                for (const item of carrinho) {
+                    console.log(`Atualizando estoque do produto ${item.codigo}...`);
+                    
+                    // Buscar estoque atual
+                    const { data: itemAtual, error: fetchError } = await supabaseClient
+                        .from('itens')
+                        .select('estoque')
+                        .eq('codigo', item.codigo)
+                        .eq('loja_id', lojaAtual.id) // Filtro por loja
+                        .single();
+
+                    if (fetchError) {
+                        console.error('❌ Erro ao buscar estoque:', fetchError);
+                        continue;
+                    }
+
+                    const novoEstoque = itemAtual.estoque - item.quantidade;
+
+                    // Atualizar estoque
+                    const { error: estoqueError } = await supabaseClient
+                        .from('itens')
+                        .update({ estoque: novoEstoque })
+                        .eq('codigo', item.codigo)
+                        .eq('loja_id', lojaAtual.id); // Filtro por loja
+
+                    if (estoqueError) {
+                        console.error('❌ Erro ao atualizar estoque:', estoqueError);
+                    } else {
+                        console.log(`✅ Estoque atualizado: ${item.codigo} (${itemAtual.estoque} → ${novoEstoque})`);
+                    }
+
+                    // Registrar movimentação
+                    const { error: movError } = await supabaseClient
+                        .from('movimentacoes')
+                        .insert([{
+                            item_codigo: item.codigo,
+                            tipo: 'VENDA',
+                            quantidade: -item.quantidade,
+                            valor_unitario: item.preco,
+                            responsavel: usuarioAtual.email,
+                            observacao: `Venda #${vendaRegistrada.id} - ${tipoPagamento}`
+                        }]);
+
+                    if (movError) {
+                        console.error('❌ Erro ao registrar movimentação:', movError);
+                    } else {
+                        console.log(`✅ Movimentação registrada: ${item.codigo}`);
+                    }
+                }
+                
+                console.log('=== VENDA COMPLETAMENTE REGISTRADA ===');
+                console.log('ID da Venda:', vendaRegistrada.id);
+                console.log('Total Produtos:', itensVenda.length);
+                console.log('Valor Total:', valorTotal);
+                
+                // Verificar se vendeu sorvete e notificar
+                console.log('=== VERIFICANDO SORVETES NO CARRINHO ===');
+                console.log('Itens no carrinho:', carrinho);
+                
+                const sorvetes = carrinho.filter(item => {
+                    const codigoUpper = String(item.codigo).toUpperCase();
+                    const isSorvete = codigoUpper.startsWith('X');
+                    console.log(`Item: ${item.nome} (${item.codigo}) - É sorvete? ${isSorvete}`);
+                    return isSorvete;
+                });
+                
+                console.log('Sorvetes encontrados:', sorvetes.length);
+                
+                if (sorvetes.length > 0) {
+                    console.log('🍦 Venda contém sorvete - enviando notificação...');
+                    try {
+                        await notificarVendaSorvete(carrinho, vendaRegistrada.id, valorTotal);
+                        console.log('✅ Notificação de sorvete enviada');
+                    } catch (error) {
+                        console.error('❌ Erro ao enviar notificação de sorvete:', error);
+                    }
+                } else {
+                    console.log('ℹ️ Nenhum sorvete na venda - não enviará notificação');
+                }
+                
+                // Retornar no formato esperado pelas funções de finalização
+                return {
+                    sucesso: true,
+                    codigo_venda: vendaRegistrada.id,
+                    venda: vendaRegistrada
+                };
+                
+            } catch (error) {
+                console.error('❌ ERRO GERAL ao registrar venda:', error);
+                return {
+                    sucesso: false,
+                    erro: error.message
+                };
+            }
+        }
+
+        // ==================== FINALIZAR VENDAS ====================
+        async function finalizarVendaPix() {
+            // ✅ VERIFICAR SE CAIXA ESTÁ ABERTO
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ CAIXA FECHADO!\n\nVocê precisa abrir o caixa antes de realizar vendas.');
+                return;
+            }
+
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio! Adicione produtos primeiro.');
+                return;
+            }
+            
+            console.log('Iniciando pagamento PIX...');
+            try {
+                const resultado = await pix();
+                
+                // Verifica se o pagamento foi bem-sucedido
+                if (resultado && resultado.resultado && resultado.resultado.data) {
+                    console.log('Pagamento PIX aprovado!');
+                    
+                    // Extrai dados do TEF
+                    const dadosTEF = {
+                        nsu: resultado.resultado.nsu || null,
+                        autorizacao: resultado.resultado.autorizacao || null,
+                        bandeira: resultado.resultado.bandeira || null,
+                        parcelas: 1
+                    };
+                    
+                    const registroVenda = await registrarVenda('PIX', dadosTEF);
+                    
+                    if (registroVenda.sucesso) {
+                        limparCarrinho(true); // Sem confirmação após venda
+                        alert(`✅ Pagamento PIX realizado com sucesso!\n\nCódigo da Venda: ${registroVenda.codigo_venda}`);
+                    } else {
+                        alert('❌ Erro ao registrar venda no sistema.');
+                    }
+                } else {
+                    console.error('Pagamento PIX não aprovado:', resultado);
+                    alert('❌ Erro no pagamento PIX. Tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro ao processar PIX:', error);
+                alert('❌ Erro ao processar pagamento PIX. Tente novamente.');
+            }
+        }
+
+        async function finalizarVendaCredito() {
+            // ✅ VERIFICAR SE CAIXA ESTÁ ABERTO
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ CAIXA FECHADO!\n\nVocê precisa abrir o caixa antes de realizar vendas.');
+                return;
+            }
+
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio! Adicione produtos primeiro.');
+                return;
+            }
+            
+            console.log('Iniciando pagamento CRÉDITO...');
+            try {
+                const resultado = await credito();
+                
+                // Verifica se o pagamento foi bem-sucedido
+                if (resultado && resultado.resultado && resultado.resultado.data) {
+                    console.log('Pagamento CRÉDITO aprovado!');
+                    
+                    // Extrai dados do TEF
+                    const dadosTEF = {
+                        nsu: resultado.resultado.nsu || null,
+                        autorizacao: resultado.resultado.autorizacao || null,
+                        bandeira: resultado.resultado.bandeira || null,
+                        parcelas: resultado.resultado.parcelas || 1
+                    };
+                    
+                    const registroVenda = await registrarVenda('CREDITO', dadosTEF);
+                    
+                    if (registroVenda.sucesso) {
+                        limparCarrinho(true); // Sem confirmação após venda
+                        alert(`✅ Pagamento CRÉDITO realizado com sucesso!\n\nCódigo da Venda: ${registroVenda.codigo_venda}\nNSU: ${dadosTEF.nsu}`);
+                    } else {
+                        alert('❌ Erro ao registrar venda no sistema.');
+                    }
+                } else {
+                    console.error('Pagamento CRÉDITO não aprovado:', resultado);
+                    alert('❌ Erro no pagamento CRÉDITO. Tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro ao processar CRÉDITO:', error);
+                alert('❌ Erro ao processar pagamento CRÉDITO. Tente novamente.');
+            }
+        }
+
+        async function finalizarVendaDebito() {
+            // ✅ VERIFICAR SE CAIXA ESTÁ ABERTO
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ CAIXA FECHADO!\n\nVocê precisa abrir o caixa antes de realizar vendas.');
+                return;
+            }
+
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio! Adicione produtos primeiro.');
+                return;
+            }
+            
+            console.log('Iniciando pagamento DÉBITO...');
+            try {
+                const resultado = await debito();
+                
+                // Verifica se o pagamento foi bem-sucedido
+                if (resultado && resultado.resultado && resultado.resultado.data) {
+                    console.log('Pagamento DÉBITO aprovado!');
+                    
+                    // Extrai dados do TEF
+                    const dadosTEF = {
+                        nsu: resultado.resultado.nsu || null,
+                        autorizacao: resultado.resultado.autorizacao || null,
+                        bandeira: resultado.resultado.bandeira || null,
+                        parcelas: 1
+                    };
+                    
+                    const registroVenda = await registrarVenda('DEBITO', dadosTEF);
+                    
+                    if (registroVenda.sucesso) {
+                        limparCarrinho(true); // Sem confirmação após venda
+                        alert(`✅ Pagamento DÉBITO realizado com sucesso!\n\nCódigo da Venda: ${registroVenda.codigo_venda}\nNSU: ${dadosTEF.nsu}`);
+                    } else {
+                        alert('❌ Erro ao registrar venda no sistema.');
+                    }
+                } else {
+                    console.error('Pagamento DÉBITO não aprovado:', resultado);
+                    alert('❌ Erro no pagamento DÉBITO. Tente novamente.');
+                }
+            } catch (error) {
+                console.error('Erro ao processar DÉBITO:', error);
+                alert('❌ Erro ao processar pagamento DÉBITO. Tente novamente.');
+            }
+        }
+
+        // ==================== FINALIZAR VENDA DINHEIRO ====================
+        async function finalizarVendaDinheiro() {
+            // ✅ VERIFICAR SE CAIXA ESTÁ ABERTO
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ CAIXA FECHADO!\n\nVocê precisa abrir o caixa antes de realizar vendas.');
+                return;
+            }
+
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio! Adicione produtos primeiro.');
+                return;
+            }
+
+            const valorTotal = parseFloat(getValorTotal());
+            
+            console.log('Iniciando pagamento em DINHEIRO...');
+            
+            // Pedir valor recebido
+            const valorRecebidoStr = prompt(`💵 PAGAMENTO EM DINHEIRO\n\nValor da compra: R$ ${valorTotal.toFixed(2)}\n\nDigite o valor recebido:`);
+            
+            if (valorRecebidoStr === null) return; // Cancelou
+            
+            const valorRecebido = parseFloat(valorRecebidoStr.replace(',', '.'));
+            
+            if (isNaN(valorRecebido) || valorRecebido < valorTotal) {
+                alert('❌ Valor inválido ou insuficiente!');
+                return;
+            }
+            
+            const troco = valorRecebido - valorTotal;
+            
+            try {
+                // 1. TENTAR ABRIR GAVETA DE DINHEIRO
+                console.log('Abrindo gaveta de dinheiro...');
+                const resultadoGaveta = await abrirGaveta();
+                
+                // Verificar se gaveta abriu ou se usuário quer continuar sem ela
+                if (resultadoGaveta && !resultadoGaveta.sucesso && !resultadoGaveta.continuarVenda) {
+                    console.log('❌ Venda cancelada pelo usuário (gaveta não abriu)');
+                    return; // Usuário cancelou
+                }
+                
+                if (resultadoGaveta && !resultadoGaveta.sucesso && resultadoGaveta.continuarVenda) {
+                    console.log('⚠️ Continuando venda sem abrir gaveta (escolha do usuário)');
+                }
+                
+                // 2. REGISTRAR VENDA
+                const dadosPagamento = {
+                    valor_recebido: valorRecebido,
+                    troco: troco
+                };
+                
+                const resultado = await registrarVenda('DINHEIRO', dadosPagamento);
+                
+                if (!resultado || !resultado.sucesso) {
+                    alert('❌ Erro ao registrar venda no sistema.');
+                    return;
+                }
+                
+                // 3. LIMPAR CARRINHO AUTOMATICAMENTE (SEM CONFIRMAÇÃO)
+                limparCarrinho(true);
+                
+                // 4. MOSTRAR TROCO
+                if (troco > 0) {
+                    alert(`✅ VENDA REALIZADA COM SUCESSO!\n\n💵 Valor Recebido: R$ ${valorRecebido.toFixed(2)}\n💰 Troco: R$ ${troco.toFixed(2)}\n\n✅ Carrinho limpo automaticamente`);
+                } else {
+                    alert(`✅ VENDA REALIZADA COM SUCESSO!\n\n💵 Valor Recebido: R$ ${valorRecebido.toFixed(2)}\n✅ Sem troco\n\n✅ Carrinho limpo automaticamente`);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao processar DINHEIRO:', error);
+                alert('❌ Erro ao processar pagamento em dinheiro:\n\n' + error.message);
+            }
+        }
+
+        // ==================== TOGGLE VIEW ====================
+        function toggleView(view) {
+            const adminPanel = document.getElementById('adminPanel');
+            
+            if (view === 'admin') {
+                adminPanel.classList.add('active');
+            } else {
+                adminPanel.classList.remove('active');
+            }
+
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // ==================== SISTEMA DE CAIXA ====================
+        
+        // Verificar status do caixa ao carregar
+        async function verificarStatusCaixa() {
+            console.log('Verificando status do caixa...');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('caixas')
+                    .select('*')
+                    .eq('loja_id', lojaAtual.id)
+                    .eq('status', 'ABERTO')
+                    .order('data_abertura', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Erro ao verificar caixa:', error);
+                    return;
+                }
+
+                if (data) {
+                    caixaAtual = data;
+                    console.log('✅ Caixa aberto encontrado:', data.id);
+                    atualizarBotaoCaixa(true);
+                } else {
+                    console.log('❌ Nenhum caixa aberto');
+                    atualizarBotaoCaixa(false);
+                }
+            } catch (error) {
+                console.error('Erro ao verificar caixa:', error);
+            }
+        }
+
+        // Atualizar visual do botão de caixa
+        function atualizarBotaoCaixa(aberto) {
+            const btn = document.getElementById('btnCaixa');
+            const icone = document.getElementById('iconeCaixa');
+            const texto = document.getElementById('textoCaixa');
+            const btnRetirada = document.getElementById('btnRetirada');
+
+            if (aberto) {
+                btn.className = 'btn-caixa aberto';
+                icone.textContent = '✅';
+                texto.textContent = 'CAIXA ABERTO';
+                btnRetirada.style.display = 'block'; // ✅ MOSTRAR BOTÃO RETIRADA
+            } else {
+                btn.className = 'btn-caixa fechado';
+                icone.textContent = '🔒';
+                texto.textContent = 'ABRIR CAIXA';
+                btnRetirada.style.display = 'none'; // ❌ OCULTAR BOTÃO RETIRADA
+            }
+        }
+
+        // Gerenciar caixa (abrir ou fechar)
+        async function gerenciarCaixa() {
+            // NOTIFICAR IMEDIATAMENTE AO CLICAR NO BOTÃO
+            if (caixaAtual && caixaAtual.status === 'ABERTO') {
+                // Clicou para FECHAR
+                await notificarAcaoCaixa('CLIQUE_FECHAR', {});
+                
+                // ABRIR GAVETA IMEDIATAMENTE
+                console.log('💰 Abrindo gaveta (clique fechar caixa)...');
+                await abrirGaveta();
+                
+                fecharCaixa();
+            } else {
+                // Clicou para ABRIR
+                await notificarAcaoCaixa('CLIQUE_ABRIR', {});
+                
+                // ABRIR GAVETA IMEDIATAMENTE
+                console.log('💰 Abrindo gaveta (clique abrir caixa)...');
+                await abrirGaveta();
+                
+                abrirCaixa();
+            }
+        }
+
+        // Abrir caixa
+        async function abrirCaixa() {
+            const valorInicial = prompt('Digite o valor inicial em caixa (R$):\n\nExemplo: 100.00');
+            
+            if (valorInicial === null) return; // Cancelou
+
+            const valor = parseFloat(valorInicial.replace(',', '.'));
+            
+            if (isNaN(valor) || valor < 0) {
+                alert('❌ Valor inválido! Digite um número positivo.');
+                return;
+            }
+
+            const observacao = prompt('Observação (opcional):') || '';
+
+            try {
+                console.log('Abrindo caixa com valor inicial:', valor);
+
+                // REGISTRAR ABERTURA NO BANCO
+                const { data, error } = await supabaseClient
+                    .from('caixas')
+                    .insert([{
+                        usuario_abertura: usuarioAtual.id,
+                        valor_inicial: valor,
+                        observacao_abertura: observacao,
+                        status: 'ABERTO'
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                caixaAtual = data;
+                console.log('✅ Caixa aberto:', data.id);
+                
+                atualizarBotaoCaixa(true);
+                
+                // ENVIAR NOTIFICAÇÃO TELEGRAM
+                await notificarAcaoCaixa('ABRIR', {
+                    valorInicial: valor,
+                    observacao: observacao
+                });
+                
+                alert(`✅ Caixa aberto com sucesso!\n\n💰 Gaveta aberta\nValor inicial: R$ ${valor.toFixed(2)}`);
+            } catch (error) {
+                console.error('Erro ao abrir caixa:', error);
+                alert('❌ Erro ao abrir caixa: ' + error.message);
+            }
+        }
+
+        // Fechar caixa
+        async function fecharCaixa() {
+            if (!caixaAtual) {
+                alert('Nenhum caixa aberto');
+                return;
+            }
+
+            // Calcular totais do caixa
+            const { data: vendas, error: vendasError } = await supabaseClient
+                .from('vendas')
+                .select('valor_total, metodo_pagamento')
+                .eq('loja_id', lojaAtual.id)
+                .gte('data_venda', caixaAtual.data_abertura)
+                .eq('status', 'CONCLUIDA');
+
+            if (vendasError) {
+                console.error('Erro ao buscar vendas:', vendasError);
+                alert('Erro ao calcular vendas do caixa');
+                return;
+            }
+
+            // Buscar retiradas do caixa
+            const { data: retiradas, error: retiradasError } = await supabaseClient
+                .from('retiradas_caixa')
+                .select('valor')
+                .eq('caixa_id', caixaAtual.id);
+
+            const totalRetiradas = retiradas ? retiradas.reduce((sum, r) => sum + parseFloat(r.valor), 0) : 0;
+
+            // Calcular totais por método
+            let totalGeral = 0;
+            let totalPix = 0;
+            let totalCredito = 0;
+            let totalDebito = 0;
+            let totalDinheiro = 0;
+            let qtdVendas = vendas.length;
+
+            vendas.forEach(venda => {
+                const valor = parseFloat(venda.valor_total);
+                totalGeral += valor;
+
+                switch(venda.metodo_pagamento) {
+                    case 'PIX': totalPix += valor; break;
+                    case 'CREDITO': totalCredito += valor; break;
+                    case 'DEBITO': totalDebito += valor; break;
+                    case 'DINHEIRO': totalDinheiro += valor; break;
+                }
+            });
+
+            const valorEsperado = parseFloat(caixaAtual.valor_inicial) + totalDinheiro - totalRetiradas;
+
+            const mensagem = `
+📊 RESUMO DO CAIXA
+
+💰 Valor Inicial: R$ ${parseFloat(caixaAtual.valor_inicial).toFixed(2)}
+
+📦 Vendas Realizadas: ${qtdVendas}
+💳 Total Vendas: R$ ${totalGeral.toFixed(2)}
+
+Detalhamento por método:
+• PIX: R$ ${totalPix.toFixed(2)}
+• Crédito: R$ ${totalCredito.toFixed(2)}
+• Débito: R$ ${totalDebito.toFixed(2)}
+• Dinheiro: R$ ${totalDinheiro.toFixed(2)}
+
+💸 Retiradas: R$ ${totalRetiradas.toFixed(2)}
+
+💵 Valor Esperado em Caixa: R$ ${valorEsperado.toFixed(2)}
+
+Digite o valor REAL contado no caixa:`;
+
+            const valorContado = prompt(mensagem);
+            
+            if (valorContado === null) return; // Cancelou
+
+            const valorFinal = parseFloat(valorContado.replace(',', '.'));
+            
+            if (isNaN(valorFinal) || valorFinal < 0) {
+                alert('❌ Valor inválido!');
+                return;
+            }
+
+            const diferenca = valorFinal - valorEsperado;
+            const observacaoFinal = prompt('Observação do fechamento (opcional):') || '';
+
+            try {
+                const { error } = await supabaseClient
+                    .from('caixas')
+                    .update({
+                        status: 'FECHADO',
+                        data_fechamento: new Date().toISOString(),
+                        usuario_fechamento: usuarioAtual.id,
+                        valor_vendas: totalGeral,
+                        valor_final: valorFinal,
+                        total_vendas_pix: totalPix,
+                        total_vendas_credito: totalCredito,
+                        total_vendas_debito: totalDebito,
+                        total_vendas_dinheiro: totalDinheiro,
+                        qtd_vendas: qtdVendas,
+                        observacao_fechamento: observacaoFinal
+                    })
+                    .eq('id', caixaAtual.id);
+
+                if (error) throw error;
+
+                let mensagemFinal = `✅ CAIXA FECHADO COM SUCESSO!\n\n`;
+                mensagemFinal += `💰 Valor Esperado: R$ ${valorEsperado.toFixed(2)}\n`;
+                mensagemFinal += `💵 Valor Contado: R$ ${valorFinal.toFixed(2)}\n\n`;
+                
+                if (diferenca > 0) {
+                    mensagemFinal += `📈 Sobra: R$ ${diferenca.toFixed(2)}`;
+                } else if (diferenca < 0) {
+                    mensagemFinal += `📉 Falta: R$ ${Math.abs(diferenca).toFixed(2)}`;
+                } else {
+                    mensagemFinal += `✅ Caixa bateu certinho!`;
+                }
+
+                console.log('✅ Venda cancelada:', vendaId);
+
+                alert(mensagemFinal);
+                
+                // Enviar notificação Telegram
+                await notificarAcaoCaixa('FECHAR', {
+                    valorInicial: parseFloat(caixaAtual.valor_inicial),
+                    valorFinal: valorFinal,
+                    valorVendas: totalGeral,
+                    qtdVendas: qtdVendas,
+                    totalRetiradas: totalRetiradas,
+                    diferenca: diferenca
+                });
+                
+                caixaAtual = null;
+                atualizarBotaoCaixa(false);
+            } catch (error) {
+                console.error('Erro ao fechar caixa:', error);
+                alert('❌ Erro ao fechar caixa: ' + error.message);
+            }
+        }
+
+        // ==================== RETIRAR DINHEIRO ====================
+        async function retirarDinheiro() {
+            // NOTIFICAR IMEDIATAMENTE AO CLICAR NO BOTÃO
+            await notificarAcaoCaixa('CLIQUE_RETIRADA', {});
+
+            // ABRIR GAVETA IMEDIATAMENTE
+            console.log('💰 Abrindo gaveta (clique retirada)...');
+            await abrirGaveta();
+
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ Nenhum caixa aberto');
+                return;
+            }
+
+            const valor = prompt('💸 RETIRADA DE DINHEIRO\n\nDigite o valor a ser retirado (R$):');
+            
+            if (valor === null) return; // Cancelou
+
+            const valorRetirada = parseFloat(valor.replace(',', '.'));
+            
+            if (isNaN(valorRetirada) || valorRetirada <= 0) {
+                alert('❌ Valor inválido! Digite um número positivo.');
+                return;
+            }
+
+            const motivo = prompt('Motivo da retirada:\n\n(Ex: Troco, Despesa, Pagamento fornecedor)') || 'Não informado';
+            const responsavel = prompt('Quem está retirando?\n\n(Ex: Nome do funcionário)') || usuarioAtual.email;
+
+            try {
+                console.log('Registrando retirada:', valorRetirada);
+
+                // REGISTRAR RETIRADA NO BANCO
+                const { data, error } = await supabaseClient
+                    .from('retiradas_caixa')
+                    .insert([{
+                        caixa_id: caixaAtual.id,
+                        valor: valorRetirada,
+                        motivo: motivo,
+                        responsavel: responsavel,
+                        usuario_id: usuarioAtual.id
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                console.log('✅ Retirada registrada:', data.id);
+                
+                // 3. ENVIAR NOTIFICAÇÃO TELEGRAM
+                await notificarAcaoCaixa('RETIRADA', {
+                    valor: valorRetirada,
+                    motivo: motivo,
+                    responsavel: responsavel
+                });
+                
+                alert(`✅ RETIRADA REGISTRADA!\n\n💰 Gaveta aberta\nValor: R$ ${valorRetirada.toFixed(2)}\nMotivo: ${motivo}\nResponsável: ${responsavel}`);
+            } catch (error) {
+                console.error('Erro ao registrar retirada:', error);
+                alert('❌ Erro ao registrar retirada: ' + error.message);
+            }
+        }
+
+        // ==================== PAGAMENTO DIVIDIDO ====================
+        
+        let parcelasDivididas = [];
+        let contadorParcelas = 0;
+
+        function abrirPagamentoDividido() {
+            if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+                alert('❌ CAIXA FECHADO!\n\nVocê precisa abrir o caixa antes de realizar vendas.');
+                return;
+            }
+
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio! Adicione produtos primeiro.');
+                return;
+            }
+
+            const valorTotal = parseFloat(getValorTotal());
+            
+            // Resetar parcelas
+            parcelasDivididas = [];
+            contadorParcelas = 0;
+            
+            // Mostrar valor total
+            document.getElementById('valorTotalDividido').textContent = valorTotal.toFixed(2).replace('.', ',');
+            document.getElementById('resumoTotal').textContent = valorTotal.toFixed(2).replace('.', ',');
+            
+            // Adicionar primeira parcela
+            adicionarParcela();
+            
+            // Abrir modal
+            document.getElementById('modalDividido').classList.add('active');
+        }
+
+        function fecharPagamentoDividido() {
+            document.getElementById('modalDividido').classList.remove('active');
+            parcelasDivididas = [];
+            contadorParcelas = 0;
+        }
+
+        function adicionarParcela() {
+            contadorParcelas++;
+            const id = contadorParcelas;
+            
+            parcelasDivididas.push({
+                id: id,
+                metodo: 'DINHEIRO',
+                valor: 0
+            });
+
+            renderizarParcelas();
+        }
+
+        function removerParcela(id) {
+            parcelasDivididas = parcelasDivididas.filter(p => p.id !== id);
+            renderizarParcelas();
+        }
+
+        function atualizarParcela(id, campo, valor) {
+            const parcela = parcelasDivididas.find(p => p.id === id);
+            if (parcela) {
+                parcela[campo] = valor;
+                calcularResumo();
+            }
+        }
+
+        function renderizarParcelas() {
+            const lista = document.getElementById('listaPagamentos');
+            
+            if (parcelasDivididas.length === 0) {
+                lista.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">Nenhuma forma de pagamento adicionada</p>';
+                return;
+            }
+
+            let html = '';
+            
+            parcelasDivididas.forEach((parcela, index) => {
+                html += `
+                    <div class="pagamento-item">
+                        <div class="pagamento-item-header">
+                            <span class="pagamento-numero">Pagamento ${index + 1}</span>
+                            ${parcelasDivididas.length > 1 ? `<button class="btn-remover-pagamento" onclick="removerParcela(${parcela.id})">🗑️ Remover</button>` : ''}
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">Forma de Pagamento:</label>
+                                <select class="form-select" onchange="atualizarParcela(${parcela.id}, 'metodo', this.value)">
+                                    <option value="DINHEIRO" ${parcela.metodo === 'DINHEIRO' ? 'selected' : ''}>💵 Dinheiro</option>
+                                    <option value="PIX" ${parcela.metodo === 'PIX' ? 'selected' : ''}>📱 PIX</option>
+                                    <option value="DEBITO" ${parcela.metodo === 'DEBITO' ? 'selected' : ''}>💳 Débito</option>
+                                    <option value="CREDITO" ${parcela.metodo === 'CREDITO' ? 'selected' : ''}>💳 Crédito</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Valor (R$):</label>
+                                <input 
+                                    type="number" 
+                                    class="form-input" 
+                                    step="0.01" 
+                                    min="0" 
+                                    value="${parcela.valor}"
+                                    onchange="atualizarParcela(${parcela.id}, 'valor', parseFloat(this.value) || 0)"
+                                    placeholder="0,00"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            lista.innerHTML = html;
+            calcularResumo();
+        }
+
+        function calcularResumo() {
+            const valorTotal = parseFloat(getValorTotal());
+            const valorPago = parcelasDivididas.reduce((sum, p) => sum + (parseFloat(p.valor) || 0), 0);
+            const faltante = valorTotal - valorPago;
+
+            document.getElementById('resumoPago').textContent = valorPago.toFixed(2).replace('.', ',');
+            
+            const faltanteEl = document.getElementById('resumoFaltante');
+            faltanteEl.textContent = 'R$ ' + Math.abs(faltante).toFixed(2).replace('.', ',');
+            
+            if (faltante > 0.01) {
+                faltanteEl.className = 'valor-faltante';
+            } else if (faltante < -0.01) {
+                faltanteEl.className = 'valor-faltante';
+                faltanteEl.textContent = 'R$ ' + Math.abs(faltante).toFixed(2).replace('.', ',') + ' (EXCEDENTE)';
+            } else {
+                faltanteEl.className = 'valor-ok';
+                faltanteEl.textContent = '✅ PAGO COMPLETO';
+            }
+        }
+
+        async function finalizarPagamentoDividido() {
+            const valorTotal = parseFloat(getValorTotal());
+            const valorPago = parcelasDivididas.reduce((sum, p) => sum + (parseFloat(p.valor) || 0), 0);
+            const diferenca = Math.abs(valorTotal - valorPago);
+
+            // Validar se valor bate (tolerância de 1 centavo)
+            if (diferenca > 0.01) {
+                if (valorPago < valorTotal) {
+                    alert(`❌ VALOR INSUFICIENTE!\n\nTotal: R$ ${valorTotal.toFixed(2)}\nPago: R$ ${valorPago.toFixed(2)}\nFalta: R$ ${(valorTotal - valorPago).toFixed(2)}`);
+                } else {
+                    alert(`❌ VALOR EXCEDENTE!\n\nTotal: R$ ${valorTotal.toFixed(2)}\nPago: R$ ${valorPago.toFixed(2)}\nExcedente: R$ ${(valorPago - valorTotal).toFixed(2)}`);
+                }
+                return;
+            }
+
+            // Validar se tem pelo menos uma forma de pagamento
+            if (parcelasDivididas.length === 0) {
+                alert('❌ Adicione pelo menos uma forma de pagamento!');
+                return;
+            }
+
+            try {
+                console.log('=== INICIANDO PAGAMENTO DIVIDIDO ===');
+                console.log('Total de formas:', parcelasDivididas.length);
+
+                const pagamentosProcessados = [];
+                let todosSucesso = true;
+
+                // PROCESSAR CADA PAGAMENTO SEQUENCIALMENTE
+                for (let i = 0; i < parcelasDivididas.length; i++) {
+                    const parcela = parcelasDivididas[i];
+                    console.log(`\n--- Processando Pagamento ${i + 1}/${parcelasDivididas.length} ---`);
+                    console.log(`Método: ${parcela.metodo}`);
+                    console.log(`Valor: R$ ${parcela.valor}`);
+
+                    let resultado = null;
+
+                    if (parcela.metodo === 'DINHEIRO') {
+                        // 1. DINHEIRO - Abrir gaveta e pedir valor
+                        console.log('💵 Processando DINHEIRO...');
+                        
+                        const valorRecebidoStr = prompt(
+                            `💵 PAGAMENTO EM DINHEIRO\n\n` +
+                            `Valor a pagar em dinheiro: R$ ${parseFloat(parcela.valor).toFixed(2)}\n\n` +
+                            `Digite o valor recebido:`
+                        );
+
+                        if (valorRecebidoStr === null) {
+                            alert('❌ Pagamento cancelado pelo usuário');
+                            todosSucesso = false;
+                            break;
+                        }
+
+                        const valorRecebido = parseFloat(valorRecebidoStr.replace(',', '.'));
+
+                        if (isNaN(valorRecebido) || valorRecebido < parseFloat(parcela.valor)) {
+                            alert('❌ Valor insuficiente para pagamento em dinheiro!');
+                            todosSucesso = false;
+                            break;
+                        }
+
+                        // Abrir gaveta
+                        const resultadoGaveta = await abrirGaveta();
+                        
+                        if (resultadoGaveta && !resultadoGaveta.sucesso && !resultadoGaveta.continuarVenda) {
+                            console.log('❌ Usuário cancelou por erro na gaveta');
+                            todosSucesso = false;
+                            break;
+                        }
+
+                        const troco = valorRecebido - parseFloat(parcela.valor);
+                        resultado = {
+                            metodo: 'DINHEIRO',
+                            valor: parseFloat(parcela.valor),
+                            valor_recebido: valorRecebido,
+                            troco: troco,
+                            sucesso: true
+                        };
+
+                        if (troco > 0) {
+                            alert(`💵 Dinheiro registrado!\n\nRecebido: R$ ${valorRecebido.toFixed(2)}\n💰 Troco: R$ ${troco.toFixed(2)}`);
+                        } else {
+                            alert(`💵 Dinheiro registrado!\n\nRecebido: R$ ${valorRecebido.toFixed(2)}\n✅ Sem troco`);
+                        }
+
+                    } else if (parcela.metodo === 'PIX') {
+                        // 2. PIX - Chamar TEF
+                        console.log('📱 Processando PIX via TEF...');
+                        alert(`📱 Processando PIX de R$ ${parseFloat(parcela.valor).toFixed(2)}\n\nAguarde a transação no TEF...`);
+
+                        let pixAprovado = false;
+                        let tentativas = 0;
+                        const maxTentativas = 3;
+
+                        while (!pixAprovado && tentativas < maxTentativas) {
+                            tentativas++;
+                            console.log(`Tentativa ${tentativas} de PIX...`);
+
+                            try {
+                                const resultadoPix = await pix();
+
+                                if (resultadoPix && resultadoPix.resultado && resultadoPix.resultado.data) {
+                                    resultado = {
+                                        metodo: 'PIX',
+                                        valor: parseFloat(parcela.valor),
+                                        nsu: resultadoPix.resultado.nsu || null,
+                                        autorizacao: resultadoPix.resultado.autorizacao || null,
+                                        sucesso: true
+                                    };
+                                    pixAprovado = true;
+                                    alert(`✅ PIX aprovado!\n\nValor: R$ ${parseFloat(parcela.valor).toFixed(2)}`);
+                                } else {
+                                    // PIX falhou
+                                    console.log('❌ PIX não aprovado');
+                                    
+                                    const opcao = confirm(
+                                        `❌ PIX NÃO APROVADO\n\n` +
+                                        `Valor: R$ ${parseFloat(parcela.valor).toFixed(2)}\n\n` +
+                                        `Possíveis causas:\n` +
+                                        `• Cliente cancelou\n` +
+                                        `• Sem saldo\n` +
+                                        `• Erro na conexão\n\n` +
+                                        `📱 Deseja TENTAR NOVAMENTE?\n\n` +
+                                        `[OK] = Tentar novamente\n` +
+                                        `[Cancelar] = Outras opções`
+                                    );
+
+                                    if (opcao) {
+                                        // Tentar novamente
+                                        continue;
+                                    } else {
+                                        // Mostrar opções
+                                        const escolha = prompt(
+                                            `⚠️ O QUE DESEJA FAZER?\n\n` +
+                                            `1 - Finalizar manualmente (cliente já pagou fora do sistema)\n` +
+                                            `2 - Trocar forma de pagamento\n` +
+                                            `3 - Cancelar toda a venda\n\n` +
+                                            `Digite o número da opção:`
+                                        );
+
+                                        if (escolha === '1') {
+                                            // Finalizar manualmente
+                                            resultado = {
+                                                metodo: 'PIX',
+                                                valor: parseFloat(parcela.valor),
+                                                nsu: 'MANUAL',
+                                                autorizacao: 'MANUAL',
+                                                manual: true,
+                                                sucesso: true
+                                            };
+                                            pixAprovado = true;
+                                            alert(`⚠️ PIX marcado como MANUAL\n\nValor: R$ ${parseFloat(parcela.valor).toFixed(2)}\n\n✅ Venda será finalizada`);
+                                        } else if (escolha === '2') {
+                                            // Trocar forma de pagamento
+                                            alert('🔄 Retorne ao modal e altere a forma de pagamento para esta parcela.');
+                                            todosSucesso = false;
+                                            break;
+                                        } else {
+                                            // Cancelar venda
+                                            alert('❌ Venda cancelada pelo operador');
+                                            todosSucesso = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Erro no PIX:', error);
+                                
+                                const opcao = confirm(
+                                    `❌ ERRO NO PIX\n\n` +
+                                    `${error.message}\n\n` +
+                                    `Deseja TENTAR NOVAMENTE?`
+                                );
+
+                                if (!opcao) {
+                                    todosSucesso = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!pixAprovado && tentativas >= maxTentativas) {
+                            alert('❌ PIX falhou após 3 tentativas');
+                            todosSucesso = false;
+                            break;
+                        }
+
+                    } else if (parcela.metodo === 'DEBITO') {
+                        // 3. DÉBITO - Chamar TEF
+                        console.log('💳 Processando DÉBITO via TEF...');
+                        alert(`💳 Processando DÉBITO de R$ ${parseFloat(parcela.valor).toFixed(2)}\n\nAguarde a transação no TEF...`);
+
+                        let debitoAprovado = false;
+                        let tentativas = 0;
+                        const maxTentativas = 3;
+
+                        while (!debitoAprovado && tentativas < maxTentativas) {
+                            tentativas++;
+                            console.log(`Tentativa ${tentativas} de DÉBITO...`);
+
+                            try {
+                                const resultadoDebito = await debito();
+
+                                if (resultadoDebito && resultadoDebito.resultado && resultadoDebito.resultado.data) {
+                                    resultado = {
+                                        metodo: 'DEBITO',
+                                        valor: parseFloat(parcela.valor),
+                                        nsu: resultadoDebito.resultado.nsu || null,
+                                        autorizacao: resultadoDebito.resultado.autorizacao || null,
+                                        sucesso: true
+                                    };
+                                    debitoAprovado = true;
+                                    alert(`✅ DÉBITO aprovado!\n\nValor: R$ ${parseFloat(parcela.valor).toFixed(2)}`);
+                                } else {
+                                    // DÉBITO falhou
+                                    const opcao = confirm(
+                                        `❌ DÉBITO NÃO APROVADO\n\n` +
+                                        `Valor: R$ ${parseFloat(parcela.valor).toFixed(2)}\n\n` +
+                                        `📱 Deseja TENTAR NOVAMENTE?\n\n` +
+                                        `[OK] = Tentar novamente\n` +
+                                        `[Cancelar] = Outras opções`
+                                    );
+
+                                    if (opcao) {
+                                        continue;
+                                    } else {
+                                        const escolha = prompt(
+                                            `⚠️ O QUE DESEJA FAZER?\n\n` +
+                                            `1 - Finalizar manualmente\n` +
+                                            `2 - Trocar forma de pagamento\n` +
+                                            `3 - Cancelar toda a venda\n\n` +
+                                            `Digite o número:`
+                                        );
+
+                                        if (escolha === '1') {
+                                            resultado = {
+                                                metodo: 'DEBITO',
+                                                valor: parseFloat(parcela.valor),
+                                                nsu: 'MANUAL',
+                                                autorizacao: 'MANUAL',
+                                                manual: true,
+                                                sucesso: true
+                                            };
+                                            debitoAprovado = true;
+                                            alert(`⚠️ DÉBITO marcado como MANUAL\n\n✅ Venda será finalizada`);
+                                        } else if (escolha === '2') {
+                                            alert('🔄 Retorne ao modal e altere a forma de pagamento.');
+                                            todosSucesso = false;
+                                            break;
+                                        } else {
+                                            alert('❌ Venda cancelada');
+                                            todosSucesso = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Erro no DÉBITO:', error);
+                                
+                                const opcao = confirm(`❌ ERRO NO DÉBITO\n\n${error.message}\n\nTentar novamente?`);
+                                if (!opcao) {
+                                    todosSucesso = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!debitoAprovado && tentativas >= maxTentativas) {
+                            alert('❌ DÉBITO falhou após 3 tentativas');
+                            todosSucesso = false;
+                            break;
+                        }
+
+                    } else if (parcela.metodo === 'CREDITO') {
+                        // 4. CRÉDITO - Chamar TEF
+                        console.log('💳 Processando CRÉDITO via TEF...');
+                        alert(`💳 Processando CRÉDITO de R$ ${parseFloat(parcela.valor).toFixed(2)}\n\nAguarde a transação no TEF...`);
+
+                        let creditoAprovado = false;
+                        let tentativas = 0;
+                        const maxTentativas = 3;
+
+                        while (!creditoAprovado && tentativas < maxTentativas) {
+                            tentativas++;
+                            console.log(`Tentativa ${tentativas} de CRÉDITO...`);
+
+                            try {
+                                const resultadoCredito = await credito();
+
+                                if (resultadoCredito && resultadoCredito.resultado && resultadoCredito.resultado.data) {
+                                    resultado = {
+                                        metodo: 'CREDITO',
+                                        valor: parseFloat(parcela.valor),
+                                        nsu: resultadoCredito.resultado.nsu || null,
+                                        autorizacao: resultadoCredito.resultado.autorizacao || null,
+                                        bandeira: resultadoCredito.resultado.bandeira || null,
+                                        parcelas: resultadoCredito.resultado.parcelas || 1,
+                                        sucesso: true
+                                    };
+                                    creditoAprovado = true;
+                                    alert(`✅ CRÉDITO aprovado!\n\nValor: R$ ${parseFloat(parcela.valor).toFixed(2)}`);
+                                } else {
+                                    // CRÉDITO falhou
+                                    const opcao = confirm(
+                                        `❌ CRÉDITO NÃO APROVADO\n\n` +
+                                        `Valor: R$ ${parseFloat(parcela.valor).toFixed(2)}\n\n` +
+                                        `📱 Deseja TENTAR NOVAMENTE?`
+                                    );
+
+                                    if (opcao) {
+                                        continue;
+                                    } else {
+                                        const escolha = prompt(
+                                            `⚠️ O QUE DESEJA FAZER?\n\n` +
+                                            `1 - Finalizar manualmente\n` +
+                                            `2 - Trocar forma de pagamento\n` +
+                                            `3 - Cancelar toda a venda\n\n` +
+                                            `Digite o número:`
+                                        );
+
+                                        if (escolha === '1') {
+                                            resultado = {
+                                                metodo: 'CREDITO',
+                                                valor: parseFloat(parcela.valor),
+                                                nsu: 'MANUAL',
+                                                autorizacao: 'MANUAL',
+                                                manual: true,
+                                                sucesso: true
+                                            };
+                                            creditoAprovado = true;
+                                            alert(`⚠️ CRÉDITO marcado como MANUAL\n\n✅ Venda será finalizada`);
+                                        } else if (escolha === '2') {
+                                            alert('🔄 Retorne ao modal e altere a forma de pagamento.');
+                                            todosSucesso = false;
+                                            break;
+                                        } else {
+                                            alert('❌ Venda cancelada');
+                                            todosSucesso = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Erro no CRÉDITO:', error);
+                                
+                                const opcao = confirm(`❌ ERRO NO CRÉDITO\n\n${error.message}\n\nTentar novamente?`);
+                                if (!opcao) {
+                                    todosSucesso = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!creditoAprovado && tentativas >= maxTentativas) {
+                            alert('❌ CRÉDITO falhou após 3 tentativas');
+                            todosSucesso = false;
+                            break;
+                        }
+                    }
+
+                    if (resultado && resultado.sucesso) {
+                        pagamentosProcessados.push(resultado);
+                        console.log(`✅ Pagamento ${i + 1} processado com sucesso`);
+                    }
+                }
+
+                // Se algum pagamento falhou, cancelar tudo
+                if (!todosSucesso) {
+                    console.log('❌ Pagamento dividido cancelado - alguma transação falhou');
+                    alert('❌ Pagamento cancelado!\n\nAlguma transação falhou ou foi cancelada.\n\nOs itens permanecem no carrinho.');
+                    return;
+                }
+
+                console.log('=== TODOS OS PAGAMENTOS APROVADOS ===');
+                console.log('Total de pagamentos:', pagamentosProcessados.length);
+
+                // AGORA SIM - REGISTRAR VENDA
+                const observacao = pagamentosProcessados.map(p => 
+                    `${p.metodo}: R$ ${parseFloat(p.valor).toFixed(2)}${p.nsu ? ' (NSU: ' + p.nsu + ')' : ''}`
+                ).join(' | ');
+
+                const dadosPagamento = {
+                    pagamento_dividido: true,
+                    formas_pagamento: pagamentosProcessados,
+                    observacao_pagamento: observacao
+                };
+
+                console.log('Registrando venda com observação:', observacao);
+
+                const resultadoVenda = await registrarVenda('DIVIDIDO', dadosPagamento);
+
+                if (!resultadoVenda || !resultadoVenda.sucesso) {
+                    alert('❌ Erro ao registrar venda no sistema!\n\nATENÇÃO: Os pagamentos foram processados mas a venda não foi registrada.');
+                    return;
+                }
+
+                console.log('✅ Venda registrada com sucesso:', resultadoVenda.codigo_venda);
+
+                // Limpar carrinho
+                limparCarrinho(true);
+
+                // Fechar modal
+                fecharPagamentoDividido();
+
+                // Mostrar sucesso detalhado
+                let mensagemSucesso = '✅ VENDA REALIZADA COM SUCESSO!\n\n';
+                mensagemSucesso += '💰 Formas de Pagamento:\n';
+                pagamentosProcessados.forEach(p => {
+                    mensagemSucesso += `• ${p.metodo}: R$ ${parseFloat(p.valor).toFixed(2)}\n`;
+                });
+                mensagemSucesso += `\n💵 Total: R$ ${valorTotal.toFixed(2)}`;
+
+                alert(mensagemSucesso);
+
+            } catch (error) {
+                console.error('❌ Erro ao finalizar pagamento dividido:', error);
+                alert('❌ Erro ao processar pagamento dividido:\n\n' + error.message);
+            }
+        }
+
+        // ==================== HISTÓRICO DE VENDAS ====================
+        
+        function abrirHistoricoVendas() {
+            // Definir data de hoje como padrão
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataFiltro').value = hoje;
+            
+            document.getElementById('modalHistorico').classList.add('active');
+            
+            // Buscar vendas de hoje automaticamente
+            buscarVendasDia();
+        }
+
+        function fecharHistoricoVendas() {
+            document.getElementById('modalHistorico').classList.remove('active');
+        }
+
+        async function buscarVendasDia() {
+            const dataInput = document.getElementById('dataFiltro').value;
+            
+            if (!dataInput) {
+                alert('❌ Selecione uma data');
+                return;
+            }
+
+            const listaDiv = document.getElementById('listaVendas');
+            listaDiv.innerHTML = '<div class="loading-vendas">⏳ Carregando vendas...</div>';
+
+            try {
+                // Buscar vendas do dia selecionado
+                const dataInicio = new Date(dataInput + 'T00:00:00');
+                const dataFim = new Date(dataInput + 'T23:59:59');
+
+                const { data: vendas, error } = await supabaseClient
+                    .from('vendas')
+                    .select('*')
+                    .eq('loja_id', lojaAtual.id)
+                    .gte('data_venda', dataInicio.toISOString())
+                    .lte('data_venda', dataFim.toISOString())
+                    .order('data_venda', { ascending: false });
+
+                if (error) throw error;
+
+                console.log(`✅ ${vendas.length} vendas encontradas`);
+
+                if (vendas.length === 0) {
+                    listaDiv.innerHTML = `
+                        <div class="empty-vendas">
+                            <div class="empty-vendas-icon">📊</div>
+                            <p>Nenhuma venda encontrada para ${new Date(dataInput).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Buscar itens de cada venda
+                let html = '';
+                for (const venda of vendas) {
+                    const { data: itens } = await supabaseClient
+                        .from('itens_venda')
+                        .select('*')
+                        .eq('venda_id', venda.id)
+                        .order('nome_produto');
+
+                    html += renderizarVendaCard(venda, itens);
+                }
+
+                listaDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Erro ao buscar vendas:', error);
+                listaDiv.innerHTML = `
+                    <div class="empty-vendas">
+                        <div class="empty-vendas-icon">⚠️</div>
+                        <p>Erro ao carregar vendas</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarVendaCard(venda, itens) {
+            const dataFormatada = new Date(venda.data_venda).toLocaleString('pt-BR');
+            const isCancelada = venda.status === 'CANCELADA';
+            
+            const metodoClass = {
+                'PIX': 'metodo-pix',
+                'CREDITO': 'metodo-credito',
+                'DEBITO': 'metodo-debito',
+                'DINHEIRO': 'metodo-dinheiro'
+            }[venda.metodo_pagamento] || 'metodo-pix';
+
+            let itensHtml = '';
+            itens.forEach(item => {
+                itensHtml += `
+                    <div class="item-venda">
+                        <div>
+                            <span class="item-nome">${item.nome_produto}</span>
+                            <span class="item-qtd"> x${item.quantidade}</span>
+                        </div>
+                        <span class="item-preco">R$ ${parseFloat(item.subtotal).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="venda-card ${isCancelada ? 'venda-cancelada' : ''}">
+                    <div class="venda-header">
+                        <div class="venda-info">
+                            <div class="venda-id">#${venda.id}</div>
+                            <div class="venda-data">📅 ${dataFormatada}</div>
+                            <span class="venda-metodo ${metodoClass}">${venda.metodo_pagamento}</span>
+                            ${isCancelada ? '<span class="badge-cancelada">❌ CANCELADA</span>' : ''}
+                        </div>
+                        <div class="venda-total">R$ ${parseFloat(venda.valor_total).toFixed(2)}</div>
+                    </div>
+                    <div class="venda-itens">
+                        <strong style="display: block; margin-bottom: 10px; color: #6b7280;">📦 Itens da Venda:</strong>
+                        ${itensHtml}
+                    </div>
+                    <div class="venda-actions">
+                        <button 
+                            class="btn-reverter" 
+                            onclick="reverterVenda(${venda.id})"
+                            ${isCancelada ? 'disabled' : ''}
+                        >
+                            ↩️ ${isCancelada ? 'JÁ CANCELADA' : 'REVERTER VENDA'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function reverterVenda(vendaId) {
+            if (!confirm('⚠️ ATENÇÃO!\n\nReverter esta venda irá:\n\n• Cancelar a venda\n• Devolver produtos ao estoque\n• Impedir contabilização financeira\n\nDeseja continuar?')) {
+                return;
+            }
+
+            try {
+                console.log('Revertendo venda:', vendaId);
+
+                // 1. Buscar itens da venda
+                const { data: itens, error: itensError } = await supabaseClient
+                    .from('itens_venda')
+                    .select('*')
+                    .eq('venda_id', vendaId);
+
+                if (itensError) throw itensError;
+
+                console.log('Itens da venda:', itens);
+
+                // 2. Devolver estoque de cada item
+                for (const item of itens) {
+                    console.log(`Devolvendo ${item.quantidade}x ${item.nome_produto} ao estoque...`);
+
+                    // Buscar estoque atual
+                    const { data: itemAtual, error: fetchError } = await supabaseClient
+                        .from('itens')
+                        .select('estoque')
+                        .eq('codigo', item.codigo_produto)
+                        .eq('loja_id', lojaAtual.id)
+                        .single();
+
+                    if (fetchError) {
+                        console.error('Erro ao buscar item:', fetchError);
+                        continue;
+                    }
+
+                    const novoEstoque = itemAtual.estoque + item.quantidade;
+
+                    // Atualizar estoque
+                    const { error: estoqueError } = await supabaseClient
+                        .from('itens')
+                        .update({ estoque: novoEstoque })
+                        .eq('codigo', item.codigo_produto)
+                        .eq('loja_id', lojaAtual.id);
+
+                    if (estoqueError) {
+                        console.error('Erro ao atualizar estoque:', estoqueError);
+                    } else {
+                        console.log(`✅ Estoque atualizado: ${item.codigo_produto} (${itemAtual.estoque} → ${novoEstoque})`);
+                    }
+
+                    // Registrar movimentação de devolução
+                    await supabaseClient
+                        .from('movimentacoes')
+                        .insert([{
+                            item_codigo: item.codigo_produto,
+                            tipo: 'DEVOLUCAO',
+                            quantidade: item.quantidade,
+                            valor_unitario: item.preco_unitario,
+                            responsavel: usuarioAtual.email,
+                            observacao: `Devolução por cancelamento da venda #${vendaId}`
+                        }]);
+                }
+
+                // 3. Marcar venda como CANCELADA
+                const { error: vendaError } = await supabaseClient
+                    .from('vendas')
+                    .update({ 
+                        status: 'CANCELADA',
+                        observacao: (venda.observacao || '') + ` | CANCELADA em ${new Date().toLocaleString()} por ${usuarioAtual.email}`
+                    })
+                    .eq('id', vendaId)
+                    .eq('loja_id', lojaAtual.id);
+
+                if (vendaError) throw vendaError;
+
+                console.log('✅ Venda cancelada:', vendaId);
+
+                alert('✅ VENDA REVERTIDA COM SUCESSO!\n\n• Estoque devolvido\n• Venda cancelada\n• Não será contabilizada');
+
+                // Recarregar lista de vendas
+                buscarVendasDia();
+
+            } catch (error) {
+                console.error('❌ Erro ao reverter venda:', error);
+                alert('❌ Erro ao reverter venda: ' + error.message);
+            }
+        }
+    </script>
+
+    <!-- ==================== CÓDIGO TEF ORIGINAL (NÃO MODIFICADO) ==================== -->
+    <script>
+        const BASE_URL = 'http://localhost:2001/tef/v1'
+        const historicoVendas = []
+
+        function start() {
+            window.location.href = 'intent://connect/start'
+        }
+
+        function stop() {
+            window.location.href = 'intent://connect/stop'
+        }
+
+        function configuracao() {
+            sendPost('/configuracao', {
+                nome: "Elgin Tef Web",
+                versao: "0.0.1",
+                textoPinpad: "TEF WEB",
+                producao: "0",
+                estabelecimento: "estabelecimento teste",
+                terminal: "000000",
+                loja: ""
+            })
+        }
+
+        function ativacao() {
+            const cnpj = prompt('Insira o CNPJ com pontuação')
+            sendPost('/ativacao', {
+                cnpjCpf: cnpj
+            })
+        }
+
+        function reimpressao() {
+            sendGet('/adm/reimpressao')
+        }
+
+        function relatorio() {
+            sendGet('/adm/relatorio')
+        }
+
+        async function venda() {
+            const venda = await sendPost('/venda', null)
+            if (!venda) return alert('Antes de realizar uma venda\nativar o IDH se Android ou GP se Windows/Linux')
+            if (venda.resultado.data !== undefined)
+                historicoVendas.push(venda)
+        }
+
+        // ==================== ABRIR GAVETA ====================
+        async function abrirGaveta() {
+            console.log('Tentando abrir gaveta de dinheiro...');
+            try {
+                // Tenta endpoint /admin/abrirgaveta (mais comum)
+                let resultado = await sendPost('/admin/abrirgaveta', null);
+                
+                if (!resultado) {
+                    // Tenta endpoint alternativo /abrirgaveta
+                    resultado = await sendPost('/abrirgaveta', null);
+                }
+                
+                if (!resultado) {
+                    // Tenta endpoint alternativo /gaveta
+                    resultado = await sendPost('/gaveta', null);
+                }
+                
+                if (resultado) {
+                    console.log('✅ Gaveta aberta com sucesso!');
+                    return { sucesso: true };
+                } else {
+                    throw new Error('Nenhum endpoint de gaveta respondeu');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao abrir gaveta:', error.message);
+                
+                // Mostrar erro e perguntar se quer continuar
+                const continuar = confirm(
+                    '⚠️ ERRO AO ABRIR GAVETA\n\n' +
+                    'Não foi possível abrir a gaveta automaticamente.\n\n' +
+                    'Possíveis causas:\n' +
+                    '• TEF não está rodando\n' +
+                    '• Gaveta não está conectada\n' +
+                    '• Endpoint não configurado\n\n' +
+                    '❓ Deseja continuar a venda SEM abrir a gaveta?'
+                );
+                
+                if (continuar) {
+                    console.log('⚠️ Usuário optou por continuar sem abrir gaveta');
+                    return { sucesso: false, continuarVenda: true };
+                } else {
+                    console.log('❌ Usuário cancelou a venda');
+                    return { sucesso: false, continuarVenda: false };
+                }
+            }
+        }
+
+        async function debito() {
+            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
+            const venda = await sendPost('/venda/debito', {
+                valor
+            })
+            if (!venda) {
+                console.error('Erro: TEF não disponível');
+                return null;
+            }
+            if (venda.resultado.data !== undefined)
+                historicoVendas.push(venda)
+            return venda;
+        }
+
+        async function credito() {
+            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
+            const venda = await sendPost('/venda/credito', {
+                valor,
+                parcelas: '1',
+                financiamento: '1'
+            })
+            if (!venda) {
+                console.error('Erro: TEF não disponível');
+                return null;
+            }
+            if (venda.resultado.data !== undefined)
+                historicoVendas.push(venda)
+            return venda;
+        }
+
+        async function cancelamento() {
+            const ultimaVenda = historicoVendas.pop()
+            if (ultimaVenda === undefined) return alert('Primeiro realizar uma venda')
+
+            const nsu = ultimaVenda.resultado.nsu.padStart(6, '0')
+            const data = ultimaVenda.resultado.data.split(' ')[0].replace(/\/20/g, '/')
+            let { valor } = ultimaVenda.resultado
+            if (valor.indexOf('.') === -1)
+                valor = valor + '.00'
+
+            console.log('dados resgatados', { nsu, valor, data })
+
+            const cancelamento = await sendPost('/adm/cancelamento', {
+                nsu,
+                valor,
+                data
+            })
+            if (!cancelamento) return alert('Antes de realizar uma venda\nativar o IDH se Android ou GP se Windows/Linux')
+        }
+
+        async function pix() {
+            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
+            const venda = await sendPost('/pix', {
+                valor,
+            })
+            if (!venda) {
+                console.error('Erro: TEF não disponível');
+                return null;
+            }
+            if (venda.resultado.data !== undefined)
+                historicoVendas.push(venda)
+            return venda;
+        }
+
+        async function intpos_venda() {
+            const valor = prompt('Insira um valor em R$ no formato (00.00)', '1.00')
+            await sendPost('/intpos', {
+                'intpos': `000-000 = CRT\n001-000 = 123\n003-000 = ${valor}\n999-999 = 0\n`
+            })
+        }
+
+        async function intpos_adm() {
+            await sendPost('/intpos', {
+                'intpos': '000-000 = ADM\n001-000 = 123\n999-999 = 0\n'
+            })
+        }
+
+        async function sendGet(rota) {
+            try {
+                const responseData = await fetch(BASE_URL + rota, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'GET'
+                })
+                const data = await responseData.json()
+                console.log('TEF Response (GET):', data)
+                return data
+            } catch (err) {
+                console.error('Erro TEF (GET):', err)
+                return null
+            }
+        }
+
+        async function sendPost(rota, body) {
+            try {
+                const responseData = await fetch(BASE_URL + rota, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                })
+                const data = await responseData.json()
+                // verifica se o retorno em resultado está definido e é um objeto
+                if (data.resultado !== undefined && data.resultado.indexOf('{') !== -1)
+                    data.resultado = JSON.parse(data.resultado)
+                console.log('TEF Response (POST):', data)
+                return data
+            } catch (err) {
+                console.error('Erro TEF (POST):', err)
+                return null
+            }
+        }
+    </script>
+    <!-- MODAL HISTÓRICO DE VENDAS -->
+    <div class="modal-historico" id="modalHistorico">
+        <div class="modal-historico-content">
+            <div class="modal-historico-header">
+                <div class="modal-historico-title">
+                    📊 Histórico de Vendas
+                </div>
+                <button class="btn-close-modal" onclick="fecharHistoricoVendas()">✖ Fechar</button>
+            </div>
+            <div class="modal-historico-body">
+                <div class="filtro-data">
+                    <label>📅 Selecione a data:</label>
+                    <input type="date" id="dataFiltro" />
+                    <button class="btn-buscar" onclick="buscarVendasDia()">🔍 Buscar</button>
+                </div>
+                <div id="listaVendas">
+                    <div class="empty-vendas">
+                        <div class="empty-vendas-icon">📊</div>
+                        <p>Selecione uma data para ver as vendas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PAGAMENTO DIVIDIDO -->
+    <div class="modal-dividido" id="modalDividido">
+        <div class="modal-dividido-content">
+            <div class="modal-dividido-header">
+                <div class="modal-dividido-title">🔀 Pagamento Dividido</div>
+                <div class="valor-total-dividido">Valor Total: R$ <span id="valorTotalDividido">0,00</span></div>
+            </div>
+            <div class="modal-dividido-body">
+                <div id="listaPagamentos"></div>
+                
+                <button class="btn-adicionar-parcela" onclick="adicionarParcela()">
+                    ➕ Adicionar Forma de Pagamento
+                </button>
+
+                <div class="resumo-dividido">
+                    <div class="resumo-linha">
+                        <span>Valor Total:</span>
+                        <span>R$ <span id="resumoTotal">0,00</span></span>
+                    </div>
+                    <div class="resumo-linha">
+                        <span>Já Pago:</span>
+                        <span>R$ <span id="resumoPago">0,00</span></span>
+                    </div>
+                    <div class="resumo-linha resumo-total">
+                        <span>Faltando:</span>
+                        <span id="resumoFaltante" class="valor-faltante">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button class="btn btn-success" style="flex: 1" onclick="finalizarPagamentoDividido()">
+                        ✅ Finalizar Venda
+                    </button>
+                    <button class="btn btn-warning" style="flex: 1" onclick="fecharPagamentoDividido()">
+                        ✖ Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
