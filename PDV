@@ -1181,7 +1181,7 @@
 
     <!-- PAINEL ADMINISTRATIVO -->
     <div class="admin-panel" id="adminPanel">
-        <div class="admin-title">Funções Administrativas TEF</div>
+        <div class="admin-title">Funções Administrativas PagBank</div>
         <div class="admin-grid">
             <button class="admin-btn" onclick="start()">Start</button>
             <button class="admin-btn" onclick="stop()">Stop</button>
@@ -3467,181 +3467,143 @@ Digite o valor REAL contado no caixa:`;
         }
     </script>
 
-    <!-- ==================== CÓDIGO TEF ORIGINAL (NÃO MODIFICADO) ==================== -->
+    <!-- ==================== INTEGRAÇÃO PAGBANK (PLUGPAG) ==================== -->
     <script>
-        const BASE_URL = 'http://localhost:2001/tef/v1'
-        const historicoVendas = []
-
-        function start() {
-            window.location.href = 'intent://connect/start'
-        }
-
-        function stop() {
-            window.location.href = 'intent://connect/stop'
-        }
-
-        function configuracao() {
-            sendPost('/configuracao', {
-                nome: "Elgin Tef Web",
-                versao: "0.0.1",
-                textoPinpad: "TEF WEB",
-                producao: "0",
-                estabelecimento: "estabelecimento teste",
-                terminal: "000000",
-                loja: ""
-            })
-        }
-
-        function ativacao() {
-            const cnpj = prompt('Insira o CNPJ com pontuação')
-            sendPost('/ativacao', {
-                cnpjCpf: cnpj
-            })
-        }
-
-        function reimpressao() {
-            sendGet('/adm/reimpressao')
-        }
-
-        function relatorio() {
-            sendGet('/adm/relatorio')
-        }
-
-        async function venda() {
-            const venda = await sendPost('/venda', null)
-            if (!venda) return alert('Antes de realizar uma venda\nativar o IDH se Android ou GP se Windows/Linux')
-            if (venda.resultado.data !== undefined)
-                historicoVendas.push(venda)
-        }
+        const PAGBANK_URL = 'http://localhost:5000'
 
         // ==================== ABRIR GAVETA ====================
         async function abrirGaveta() {
             try {
-                const _r=await fetch('http://localhost:5000/abrir-gaveta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'abrir'}),signal:AbortSignal.timeout(5000)});
-                const _d=await _r.json();
-                if(_d.sucesso) return {sucesso:true};
-                throw new Error(_d.erro||'Gaveta nao abriu');
-            } catch(e){
-                const ok=confirm('⚠️ ERRO GAVETA\nContinuar SEM gaveta?');
-                return {sucesso:false,continuarVenda:ok};
-            }
-        }
-
-        async function debito() {
-            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
-            const venda = await sendPost('/venda/debito', {
-                valor
-            })
-            if (!venda) {
-                console.error('Erro: TEF não disponível');
-                return null;
-            }
-            if (venda.resultado.data !== undefined)
-                historicoVendas.push(venda)
-            return venda;
-        }
-
-        async function credito() {
-            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
-            const venda = await sendPost('/venda/credito', {
-                valor,
-                parcelas: '1',
-                financiamento: '1'
-            })
-            if (!venda) {
-                console.error('Erro: TEF não disponível');
-                return null;
-            }
-            if (venda.resultado.data !== undefined)
-                historicoVendas.push(venda)
-            return venda;
-        }
-
-        async function cancelamento() {
-            const ultimaVenda = historicoVendas.pop()
-            if (ultimaVenda === undefined) return alert('Primeiro realizar uma venda')
-
-            const nsu = ultimaVenda.resultado.nsu.padStart(6, '0')
-            const data = ultimaVenda.resultado.data.split(' ')[0].replace(/\/20/g, '/')
-            let { valor } = ultimaVenda.resultado
-            if (valor.indexOf('.') === -1)
-                valor = valor + '.00'
-
-            console.log('dados resgatados', { nsu, valor, data })
-
-            const cancelamento = await sendPost('/adm/cancelamento', {
-                nsu,
-                valor,
-                data
-            })
-            if (!cancelamento) return alert('Antes de realizar uma venda\nativar o IDH se Android ou GP se Windows/Linux')
-        }
-
-        async function pix() {
-            const valor = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00')
-            const venda = await sendPost('/pix', {
-                valor,
-            })
-            if (!venda) {
-                console.error('Erro: TEF não disponível');
-                return null;
-            }
-            if (venda.resultado.data !== undefined)
-                historicoVendas.push(venda)
-            return venda;
-        }
-
-        async function intpos_venda() {
-            const valor = prompt('Insira um valor em R$ no formato (00.00)', '1.00')
-            await sendPost('/intpos', {
-                'intpos': `000-000 = CRT\n001-000 = 123\n003-000 = ${valor}\n999-999 = 0\n`
-            })
-        }
-
-        async function intpos_adm() {
-            await sendPost('/intpos', {
-                'intpos': '000-000 = ADM\n001-000 = 123\n999-999 = 0\n'
-            })
-        }
-
-        async function sendGet(rota) {
-            try {
-                const responseData = await fetch(BASE_URL + rota, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    method: 'GET'
-                })
-                const data = await responseData.json()
-                console.log('TEF Response (GET):', data)
-                return data
-            } catch (err) {
-                console.error('Erro TEF (GET):', err)
-                return null
-            }
-        }
-
-        async function sendPost(rota, body) {
-            try {
-                const responseData = await fetch(BASE_URL + rota, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
+                const _r = await fetch(`${PAGBANK_URL}/abrir-gaveta`, {
                     method: 'POST',
-                    body: JSON.stringify(body)
-                })
-                const data = await responseData.json()
-                // verifica se o retorno em resultado está definido e é um objeto
-                if (data.resultado !== undefined && data.resultado.indexOf('{') !== -1)
-                    data.resultado = JSON.parse(data.resultado)
-                console.log('TEF Response (POST):', data)
-                return data
-            } catch (err) {
-                console.error('Erro TEF (POST):', err)
-                return null
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ acao: 'abrir' }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                const _d = await _r.json();
+                if (_d.sucesso) return { sucesso: true };
+                throw new Error(_d.erro || 'Gaveta nao abriu');
+            } catch (e) {
+                const ok = confirm('⚠️ ERRO GAVETA\nContinuar SEM gaveta?');
+                return { sucesso: false, continuarVenda: ok };
             }
+        }
+
+        // ==================== DÉBITO PAGBANK ====================
+        async function debito() {
+            const valorBruto = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00');
+            const valor = parseFloat(valorBruto);
+            if (!valor || valor <= 0) return null;
+
+            console.log(`💳 Iniciando DÉBITO PagBank: R$ ${valor.toFixed(2)}`);
+            try {
+                const resp = await fetch(`${PAGBANK_URL}/pagbank/debito`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor })
+                });
+                const data = await resp.json();
+                console.log('PagBank Débito response:', data);
+
+                // Normaliza resposta para o mesmo formato que o restante do sistema espera
+                return _normalizarRespostaPagBank(data);
+            } catch (err) {
+                console.error('Erro PagBank débito:', err);
+                return null;
+            }
+        }
+
+        // ==================== CRÉDITO PAGBANK ====================
+        async function credito() {
+            const valorBruto = getValorTotal() || prompt('Insira um valor em R$ no formato (00.00)', '1.00');
+            const valor = parseFloat(valorBruto);
+            if (!valor || valor <= 0) return null;
+
+            console.log(`💳 Iniciando CRÉDITO PagBank: R$ ${valor.toFixed(2)}`);
+            try {
+                const resp = await fetch(`${PAGBANK_URL}/pagbank/credito`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor })
+                });
+                const data = await resp.json();
+                console.log('PagBank Crédito response:', data);
+
+                return _normalizarRespostaPagBank(data);
+            } catch (err) {
+                console.error('Erro PagBank crédito:', err);
+                return null;
+            }
+        }
+
+        // ==================== PIX (DÉBITO VIA PAGBANK — sem PIX nativo no PlugPag) ====================
+        async function pix() {
+            // PlugPag não suporta PIX nativo; encaminha como débito.
+            // Se sua maquininha tiver PIX, adapte aqui para o endpoint correto.
+            console.log('ℹ️ PIX encaminhado como débito via PagBank');
+            return await debito();
+        }
+
+        // ==================== CANCELAMENTO PAGBANK ====================
+        async function cancelamento() {
+            if (!confirm('Deseja estornar a última transação na maquininha PagBank?')) return;
+            try {
+                const resp = await fetch(`${PAGBANK_URL}/pagbank/cancelamento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await resp.json();
+                if (data.aprovado) {
+                    alert('✅ Cancelamento realizado com sucesso!\n' + (data.mensagem || ''));
+                } else {
+                    alert('❌ Cancelamento NEGADO\n' + (data.mensagem || 'Sem resposta da maquininha'));
+                }
+            } catch (err) {
+                alert('❌ Erro ao comunicar com o servidor PagBank.\nVerifique se o resoluao.py está rodando.');
+                console.error('Erro cancelamento PagBank:', err);
+            }
+        }
+
+        // ==================== FUNÇÕES ADMIN (compatibilidade — sem efeito no PagBank) ====================
+        function start()        { alert('ℹ️ PagBank: conexão é automática via Bluetooth.\nVerifique a porta COM no resoluao.py.'); }
+        function stop()         { alert('ℹ️ PagBank: para desconectar, desligue a maquininha.'); }
+        function configuracao() { alert('ℹ️ Configuração do PagBank é feita no resoluao.py (BLUETOOTH_PORT).'); }
+        function ativacao()     { alert('ℹ️ A ativação do PagBank é feita diretamente na maquininha PagBank.'); }
+        function reimpressao()  { alert('ℹ️ Reimpressão não disponível via PlugPag neste momento.'); }
+        function relatorio()    { alert('ℹ️ Relatório: acesse os registros no Supabase ou no painel PagBank.'); }
+        function intpos_venda() { alert('ℹ️ IntPos não aplicável — use os botões CRÉDITO / DÉBITO.'); }
+        function intpos_adm()   { alert('ℹ️ IntPos ADM não aplicável no PagBank.'); }
+
+        // ==================== NORMALIZAÇÃO DE RESPOSTA ====================
+        // Converte o retorno do PlugPag para o formato {resultado: {tef: {...}}}
+        // que o restante do VENDAS.HTML já conhece e usa para aprovar vendas.
+        function _normalizarRespostaPagBank(data) {
+            if (!data) return null;
+
+            // Se aprovado, monta estrutura compatível com resultado.resultado.tef.codigoAutorizacao
+            if (data.aprovado && data.autorizacao) {
+                return {
+                    resultado: {
+                        tef: {
+                            codigoAutorizacao:  data.autorizacao,
+                            codigoBandeira:     data.bandeira    || '',
+                            mensagemResultado:  data.mensagem    || 'Aprovado',
+                            numeroParcelas:     1,
+                            nsu:                data.nsu         || '',
+                        }
+                    }
+                };
+            }
+
+            // Negado — retorna sem codigoAutorizacao para que o sistema rejeite
+            return {
+                resultado: {
+                    tef: {
+                        mensagemResultado: data.mensagem || 'Transação não aprovada',
+                    }
+                }
+            };
         }
     </script>
     <!-- MODAL HISTÓRICO DE VENDAS -->
