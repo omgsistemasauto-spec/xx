@@ -689,9 +689,13 @@ async function iniciarPagamento(metodo) {
             document.getElementById('btnCancelarPgto').disabled = true;
             const tef = resultado.resultado?.tef || {};
             const dadosTEF = { nsu: tef.nsuTerminal || tef.nsuTransacao || null, data_tef: tef.dataHoraTransacao || null, autorizacao: tef.codigoAutorizacao || null, bandeira: tef.nomeBandeira || tef.codigoBandeira || null, parcelas: tef.parcelas || 1 };
+            // IMPRIME CUPOM IMEDIATAMENTE após TEF aprovar (antes de registrar no sistema)
+            const codigoTemp = Date.now();
+            imprimirCupom(carrinho, getValorTotal(), codigoTemp, metodo);
+            // Agora registra no sistema em background
             const reg = await registrarVendaTotem(metodo, dadosTEF);
             document.getElementById('modalPagamento').classList.remove('active');
-            if (reg?.sucesso) { imprimirCupom(carrinho, getValorTotal(), reg.codigo_venda, metodo); mostrarSucesso(reg.codigo_venda, metodo === 'PIX'); }
+            if (reg?.sucesso) { mostrarSucesso(reg.codigo_venda, metodo === 'PIX'); }
             else { alert('❌ Pagamento aprovado no TEF, mas erro ao salvar no sistema.\nNSU: ' + (dadosTEF.nsu || 'N/A')); }
         } else {
             const msg = getMensagemTEF(resultado);
@@ -806,8 +810,12 @@ async function finalizarDividido() {
         }
     }
     document.getElementById('modalPagamento').classList.remove('active');
+    // IMPRIME CUPOM IMEDIATAMENTE após todos os pagamentos aprovados (antes de registrar no sistema)
+    const codigoTemp = Date.now();
+    imprimirCupom(carrinhoParaImprimir, totalParaImprimir, codigoTemp, 'DIVIDIDO');
+    // Agora registra no sistema em background
     const reg = await registrarVendaTotem('DIVIDIDO', {});
-    if (reg?.sucesso) { imprimirCupom(carrinhoParaImprimir, totalParaImprimir, reg.codigo_venda, 'DIVIDIDO'); mostrarSucesso(reg.codigo_venda, false); }
+    if (reg?.sucesso) { mostrarSucesso(reg.codigo_venda, false); }
     else { alert('❌ Todos os pagamentos aprovados, mas erro ao salvar no sistema. Contate o suporte.'); }
 }
 
