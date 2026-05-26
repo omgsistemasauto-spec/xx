@@ -3950,7 +3950,7 @@
         function abrirHistoricoVendas() {
             const senhaDigitada = prompt('🔒 Digite a senha para acessar o histórico de vendas:');
             if (senhaDigitada === null) return; // Cancelou
-            if (senhaDigitada !== 'novello01') {
+            if (senhaDigitada !== 'salgado01') {
                 alert('❌ Senha incorreta! Acesso negado.');
                 return;
             }
